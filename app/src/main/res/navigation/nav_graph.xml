@@ -1,6 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/nav_graph">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/dashboardFragment">
+
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name ="com.example.gestionhabitos.view.fragments.DashboardFragment"
+        android:label="Panel Principal"
+        tools:layout="@layout/fragment_dashboard" />
+
+    <fragment
+        android:id="@+id/listaHabitosFragment"
+        android:name="com.example.gestionhabitos.view.fragments.ListaHabitosFragment"
+        android:label="Mis Hábitos"
+        tools:layout="@layout/fragment_lista_habitos">
+
+        <action
+            android:id="@+id/action_listaHabitosFragment_to_agregarEditarHabitoFragment"
+            app:destination="@id/agregarEditarHabitoFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/estadisticasFragment"
+        android:name="com.example.gestionhabitos.view.fragments.EstadisticasFragment"
+        android:label="Estadísticas"
+        tools:layout="@layout/fragment_estadisticas" />
+
+    <fragment
+        android:id="@+id/agregarEditarHabitoFragment"
+        android:name="com.example.gestionhabitos.view.fragments.AgregarEditarHabitoFragment"
+        android:label="Nuevo Hábito"
+        tools:layout="@layout/fragment_agregar_editar_habito" />
 
 </navigation>
