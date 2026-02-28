@@ -11,7 +11,8 @@ import com.example.gestionhabitos.databinding.ItemHabitoBinding
 import com.example.gestionhabitos.model.entitis.Habito
 
 class HabitoAdapter(
-    private var listaHabitos: List<Habito>,
+    // Se cambia a public para poder acceder desde el ItemTouchHelper
+    var listaHabitos: List<Habito>,
     private val onHabitChecked: (Habito, Boolean) -> Unit
 ) : RecyclerView.Adapter<HabitoAdapter.HabitoViewHolder>() {
 
@@ -29,13 +30,11 @@ class HabitoAdapter(
         holder.binding.tvHabitName.text = habito.nombre
         holder.binding.tvHabitCategory.text = habito.categoria
 
-        // Color inicial: usamos surface_white para el estado pendiente
         val colorInicial = if (habito.completado)
             ContextCompat.getColor(context, R.color.habit_completed_bg)
         else
             ContextCompat.getColor(context, R.color.surface_white)
 
-        // IMPORTANTE: setCardBackgroundColor para respetar los bordes redondeados
         holder.binding.root.setCardBackgroundColor(colorInicial)
 
         holder.binding.cbHabitDone.setOnCheckedChangeListener(null)
@@ -52,11 +51,9 @@ class HabitoAdapter(
             else
                 ContextCompat.getColor(context, R.color.surface_white)
 
-            // Animación fluida de 300ms
             ValueAnimator.ofObject(ArgbEvaluator(), colorDesde, colorHasta).apply {
                 duration = 300
                 addUpdateListener { animator ->
-                    // Aplicamos el color animado a la propiedad de la tarjeta
                     holder.binding.root.setCardBackgroundColor(animator.animatedValue as Int)
                 }
                 start()

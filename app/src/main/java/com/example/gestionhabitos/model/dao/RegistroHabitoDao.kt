@@ -1,16 +1,15 @@
 package com.example.gestionhabitos.model.dao
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
+import androidx.room.*
 import com.example.gestionhabitos.model.entitis.RegistroHabito
+import kotlinx.coroutines.flow.Flow
 
-@Dao // Indispensable para que Room lo reconozca
-interface RegistroHabitoDao { // <-- Verifica que este nombre coincida exactamente
-
-    @Insert
-    suspend fun insertar(registro: RegistroHabito)
-
+@Dao
+interface RegistroHabitoDao {
+    // Cambiado de registros_habitos_table a registro_habitos
     @Query("SELECT * FROM registro_habitos WHERE habitoId = :habitoId")
-    suspend fun obtenerPorHabito(habitoId: Int): List<RegistroHabito>
+    fun obtenerRegistrosPorHabito(habitoId: Int): Flow<List<RegistroHabito>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertar(registro: RegistroHabito)
 }

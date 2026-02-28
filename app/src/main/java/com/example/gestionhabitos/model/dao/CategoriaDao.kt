@@ -1,15 +1,18 @@
 package com.example.gestionhabitos.model.dao
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
+import androidx.room.*
 import com.example.gestionhabitos.model.entitis.Categoria
+import kotlinx.coroutines.flow.Flow
 
-@Dao // Indispensable para que AppDatabase lo reconozca
+@Dao
 interface CategoriaDao {
-    @Insert
+    // Cambiado de categorias_table a categorias para coincidir con tu Entity
+    @Query("SELECT * FROM categorias")
+    fun obtenerCategorias(): Flow<List<Categoria>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertar(categoria: Categoria)
 
-    @Query("SELECT * FROM categorias")
-    suspend fun obtenerTodas(): List<Categoria>
+    @Delete
+    suspend fun eliminar(categoria: Categoria)
 }

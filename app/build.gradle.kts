@@ -48,11 +48,10 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-    // --- DEPENDENCIAS DE ROOM AGREGADAS ---
+    // --- DEPENDENCIAS DE ROOM ---
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
-    // El compilador KSP genera el código interno de tus DAOs
     ksp("androidx.room:room-compiler:$roomVersion")
 
     testImplementation(libs.junit)
@@ -62,8 +61,11 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.8.5")
     implementation("androidx.activity:activity-ktx:1.9.3")
 
-    // También asegúrate de tener las de Lifecycle
+    // Lifecycle
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
+
+    // --- RETROFIT CORREGIDO ---
+    implementation("com.squareup.retrofit2:retrofit:2.9.0") // Cambio de com.rawg a com.squareup
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }

@@ -1,4 +1,8 @@
-package com.example.gestionhabitos.network
+package com.example.gestionhabitos.model.api
 
-class ApiService {
+import retrofit2.http.GET
+
+interface FraseApiService {
+    @GET("random") // Obtenemos una frase aleatoria
+    suspend fun obtenerFraseAleatoria(): List<FraseResponse>
 }

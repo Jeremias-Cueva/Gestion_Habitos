@@ -4,10 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.gestionhabitos.R
 import com.example.gestionhabitos.databinding.FragmentListaHabitosBinding
 import com.example.gestionhabitos.view.adapters.HabitoAdapter
@@ -17,8 +20,6 @@ class ListaHabitosFragment : Fragment() {
 
     private var _binding: FragmentListaHabitosBinding? = null
     private val binding get() = _binding!!
-
-    // Inicializamos el ViewModel usando el delegado de la biblioteca ktx
     private val viewModel: HabitoViewModel by viewModels()
 
     override fun onCreateView(
@@ -32,24 +33,32 @@ class ListaHabitosFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Configuramos el adaptador con la lógica para actualizar la DB al marcar el check
         val adapter = HabitoAdapter(emptyList()) { habito, isChecked ->
-            // Creamos una copia del hábito con el nuevo estado del Checkbox
-            val habitoActualizado = habito.copy(completado = isChecked)
-            // Mandamos la actualización a Room a través del ViewModel
-            viewModel.actualizar(habitoActualizado)
+            viewModel.actualizarEstadoHabito(habito, isChecked)
         }
 
-        // 2. Vinculamos el adaptador y el LayoutManager al RecyclerView
         binding.rvHabitos.adapter = adapter
         binding.rvHabitos.layoutManager = LinearLayoutManager(requireContext())
 
-        // 3. Observamos los cambios en la base de datos para refrescar la lista automáticamente
         viewModel.listaHabitos.observe(viewLifecycleOwner) { habitos ->
             adapter.updateList(habitos)
         }
 
-        // 4. Configuración del botón flotante con la acción de navegación
+        // --- LÓGICA DE ELIMINACIÓN POR DESLIZAMIENTO (SWIPE) ---
+        val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val posicion = viewHolder.adapterPosition
+                val habitoAEliminar = adapter.listaHabitos[posicion] // Acceso directo a la lista
+
+                viewModel.eliminar(habitoAEliminar) // Ejecuta la eliminación en Room
+                Toast.makeText(requireContext(), "Hábito eliminado", Toast.LENGTH_SHORT).show()
+            }
+        }
+        ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.rvHabitos)
+        // ------------------------------------------------------------------
+
         binding.fabAddHabit.setOnClickListener {
             findNavController().navigate(R.id.action_listaHabitosFragment_to_agregarEditarHabitoFragment)
         }
