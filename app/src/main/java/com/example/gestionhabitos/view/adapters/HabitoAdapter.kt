@@ -1,39 +1,75 @@
 package com.example.gestionhabitos.view.adapters
 
+import android.animation.ArgbEvaluator
+import android.animation.ValueAnimator
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.example.gestionhabitos.R
 import com.example.gestionhabitos.databinding.ItemHabitoBinding
 import com.example.gestionhabitos.model.entitis.Habito
 
-class HabitoAdapter(private var listaHabitos: List<Habito>) :
-    RecyclerView.Adapter<HabitoAdapter.HabitoViewHolder>() {
+class HabitoAdapter(
+    private var listaHabitos: List<Habito>,
+    private val onHabitChecked: (Habito, Boolean) -> Unit
+) : RecyclerView.Adapter<HabitoAdapter.HabitoViewHolder>() {
 
-    // El ViewHolder es el contenedor de la vista de cada fila
     class HabitoViewHolder(val binding: ItemHabitoBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HabitoViewHolder {
-        val binding = ItemHabitoBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+        val binding = ItemHabitoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return HabitoViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: HabitoViewHolder, position: Int) {
         val habito = listaHabitos[position]
-        // Vinculamos los datos de la entidad con los TextViews del diseño item_habito.xml
+        val context = holder.itemView.context
+
         holder.binding.tvHabitName.text = habito.nombre
         holder.binding.tvHabitCategory.text = habito.categoria
+
+        // Color inicial: usamos surface_white para el estado pendiente
+        val colorInicial = if (habito.completado)
+            ContextCompat.getColor(context, R.color.habit_completed_bg)
+        else
+            ContextCompat.getColor(context, R.color.surface_white)
+
+        // IMPORTANTE: setCardBackgroundColor para respetar los bordes redondeados
+        holder.binding.root.setCardBackgroundColor(colorInicial)
+
+        holder.binding.cbHabitDone.setOnCheckedChangeListener(null)
         holder.binding.cbHabitDone.isChecked = habito.completado
+
+        holder.binding.cbHabitDone.setOnCheckedChangeListener { _, isChecked ->
+            val colorDesde = if (isChecked)
+                ContextCompat.getColor(context, R.color.surface_white)
+            else
+                ContextCompat.getColor(context, R.color.habit_completed_bg)
+
+            val colorHasta = if (isChecked)
+                ContextCompat.getColor(context, R.color.habit_completed_bg)
+            else
+                ContextCompat.getColor(context, R.color.surface_white)
+
+            // Animación fluida de 300ms
+            ValueAnimator.ofObject(ArgbEvaluator(), colorDesde, colorHasta).apply {
+                duration = 300
+                addUpdateListener { animator ->
+                    // Aplicamos el color animado a la propiedad de la tarjeta
+                    holder.binding.root.setCardBackgroundColor(animator.animatedValue as Int)
+                }
+                start()
+            }
+
+            onHabitChecked(habito, isChecked)
+        }
     }
 
     override fun getItemCount(): Int = listaHabitos.size
 
-    // Este método es vital para que la pantalla se actualice cuando observes cambios en el ViewModel
     fun updateList(nuevaLista: List<Habito>) {
         this.listaHabitos = nuevaLista
-        notifyDataSetChanged() // Refresca la lista completa en pantalla
+        notifyDataSetChanged()
     }
 }

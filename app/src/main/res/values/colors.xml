@@ -6,7 +6,9 @@
     <color name="background_light">#F8FAFC</color>
     <color name="surface_white">#FFFFFF</color>
     <color name="text_primary">#1E293B</color>
-
-    <color name="purple_500">#6366F1</color>
     <color name="text_secondary">#64748B</color>
+
+    <color name="habit_completed_bg">#E0E7FF</color> <color name="habit_pending_bg">#FFFFFF</color>   <color name="purple_500">#6366F1</color>
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
 </resources>

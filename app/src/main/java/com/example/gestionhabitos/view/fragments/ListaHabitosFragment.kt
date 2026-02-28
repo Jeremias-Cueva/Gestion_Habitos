@@ -18,6 +18,7 @@ class ListaHabitosFragment : Fragment() {
     private var _binding: FragmentListaHabitosBinding? = null
     private val binding get() = _binding!!
 
+    // Inicializamos el ViewModel usando el delegado de la biblioteca ktx
     private val viewModel: HabitoViewModel by viewModels()
 
     override fun onCreateView(
@@ -31,20 +32,29 @@ class ListaHabitosFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // El ID correcto es rvHabitos según tu XML
-        val adapter = HabitoAdapter(emptyList())
+        // 1. Configuramos el adaptador con la lógica para actualizar la DB al marcar el check
+        val adapter = HabitoAdapter(emptyList()) { habito, isChecked ->
+            // Creamos una copia del hábito con el nuevo estado del Checkbox
+            val habitoActualizado = habito.copy(completado = isChecked)
+            // Mandamos la actualización a Room a través del ViewModel
+            viewModel.actualizar(habitoActualizado)
+        }
+
+        // 2. Vinculamos el adaptador y el LayoutManager al RecyclerView
         binding.rvHabitos.adapter = adapter
         binding.rvHabitos.layoutManager = LinearLayoutManager(requireContext())
 
-        // Asegúrate de que en HabitoViewModel la variable se llame listaHabitos
+        // 3. Observamos los cambios en la base de datos para refrescar la lista automáticamente
         viewModel.listaHabitos.observe(viewLifecycleOwner) { habitos ->
             adapter.updateList(habitos)
         }
 
+        // 4. Configuración del botón flotante con la acción de navegación
         binding.fabAddHabit.setOnClickListener {
             findNavController().navigate(R.id.action_listaHabitosFragment_to_agregarEditarHabitoFragment)
         }
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
