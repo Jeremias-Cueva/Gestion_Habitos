@@ -11,6 +11,7 @@
         android:label="Panel Principal"
         tools:layout="@layout/fragment_dashboard" />
 
+
     <fragment
         android:id="@+id/listaHabitosFragment"
         android:name="com.example.gestionhabitos.view.fragments.ListaHabitosFragment"
@@ -31,11 +32,17 @@
         android:name="com.example.gestionhabitos.view.fragments.EstadisticasFragment"
         android:label="Estadísticas"
         tools:layout="@layout/fragment_estadisticas" />
+    <fragment
+        android:id="@+id/perfilFragment"
+        android:name="com.example.gestionhabitos.view.fragments.PerfilFragment"
+        android:label="Mi Perfil"
+        tools:layout="@layout/fragment_perfil" />
 
     <fragment
         android:id="@+id/agregarEditarHabitoFragment"
         android:name="com.example.gestionhabitos.view.fragments.AgregarEditarHabitoFragment"
         android:label="Nuevo Hábito"
         tools:layout="@layout/fragment_agregar_editar_habito" />
+
 
 </navigation>

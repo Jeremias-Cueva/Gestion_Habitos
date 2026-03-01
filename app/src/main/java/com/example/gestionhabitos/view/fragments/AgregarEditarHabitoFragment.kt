@@ -24,30 +24,31 @@ class AgregarEditarHabitoFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentAgregarEditarHabitoBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         binding.btnSaveHabit.setOnClickListener {
-
-            val nombre = binding.tilHabitName.editText?.text.toString().trim()
+            // Cambiado tilHabitName por tilName para que coincida con el XML
+            val nombre = binding.etHabitName.text.toString().trim()
 
             if (nombre.isNotEmpty()) {
-
                 val nuevoHabito = Habito(
                     nombre = nombre,
-                    categoria = "General"
+                    categoria = "General" // Luego podemos hacerlo dinámico con el Dropdown
                 )
 
                 viewModel.insertar(nuevoHabito)
-
-                Toast.makeText(context, "Hábito guardado correctamente", Toast.LENGTH_SHORT).show()
-
+                Toast.makeText(requireContext(), "Hábito guardado correctamente", Toast.LENGTH_SHORT).show()
                 findNavController().popBackStack()
 
             } else {
-                binding.tilHabitName.error = "Por favor, escribe un nombre"
+                // Cambiado tilHabitName por tilName
+                binding.tilName.error = "Por favor, escribe un nombre"
             }
         }
-
-        return binding.root
     }
 
     override fun onDestroyView() {
