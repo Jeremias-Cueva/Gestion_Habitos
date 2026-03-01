@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter // Necesario para el menú
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -32,15 +32,21 @@ class AgregarEditarHabitoFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Configurar las opciones del menú desplegable
+        // 1. Configurar las opciones con un layout personalizado para el color
         val categorias = arrayOf("Salud", "Estudio", "Trabajo", "Deporte", "General")
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, categorias)
+
+        // Usamos simple_spinner_dropdown_item o un layout propio para forzar el color negro
+        val adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_dropdown_item,
+            categorias
+        )
         binding.actvCategory.setAdapter(adapter)
 
         // 2. Lógica del botón Guardar
         binding.btnSaveHabit.setOnClickListener {
             val nombre = binding.etHabitName.text.toString().trim()
-            val categoriaSeleccionada = binding.actvCategory.text.toString() // Captura la selección
+            val categoriaSeleccionada = binding.actvCategory.text.toString()
 
             if (nombre.isNotEmpty()) {
                 val nuevoHabito = Habito(
