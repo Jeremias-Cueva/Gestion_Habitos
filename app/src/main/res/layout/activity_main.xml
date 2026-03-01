@@ -23,7 +23,10 @@
             android:background="@color/surface_white"
             app:title="HabitFlow"
             app:titleCentered="true"
-            app:titleTextColor="@color/text_primary" />
+            app:titleTextColor="@color/text_primary"
+            app:logo="@drawable/habitflow"
+            app:logoScaleType="centerInside" />
+
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.fragment.app.FragmentContainerView

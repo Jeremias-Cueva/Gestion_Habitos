@@ -4,28 +4,22 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.example.gestionhabitos.R
 import com.example.gestionhabitos.databinding.FragmentPerfilBinding
 import com.example.gestionhabitos.model.entitis.Usuario
 import com.example.gestionhabitos.viewmodel.UsuarioViewModel
-import com.example.gestionhabitos.R
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
+
 class PerfilFragment : Fragment() {
     private var _binding: FragmentPerfilBinding? = null
     private val binding get() = _binding!!
-
-    // Inicializamos el ViewModel
     private val usuarioViewModel: UsuarioViewModel by viewModels()
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentPerfilBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -33,7 +27,7 @@ class PerfilFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Observar los datos de Room para actualizar la UI automáticamente
+        // Observar datos de Room
         usuarioViewModel.datosUsuario.observe(viewLifecycleOwner) { usuario ->
             usuario?.let {
                 binding.tvUserNameProfile.text = it.nombre
@@ -41,26 +35,27 @@ class PerfilFragment : Fragment() {
             }
         }
 
-        // 2. Configurar el botón de edición con un AlertDialog
-        binding.btnEditProfile.setOnClickListener {
-            mostrarDialogoEdicion()
-        }
+        binding.btnEditProfile.setOnClickListener { mostrarDialogoEdicion() }
     }
 
     private fun mostrarDialogoEdicion() {
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_editar_perfil, null)
-        val etNombre = dialogView.findViewById<TextInputEditText>(R.id.etNombreDialog)
-        val etCorreo = dialogView.findViewById<TextInputEditText>(R.id.etCorreoDialog)
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_editar_perfil, null)
+        val etNombre = view.findViewById<TextInputEditText>(R.id.etNombreDialog)
+        val etCorreo = view.findViewById<TextInputEditText>(R.id.etCorreoDialog)
 
-        // Llenamos con los datos actuales
         etNombre.setText(binding.tvUserNameProfile.text)
         etCorreo.setText(binding.tvUserEmail.text)
 
-        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Editar Perfil")
-            .setView(dialogView)
+            .setView(view)
             .setPositiveButton("Guardar") { _, _ ->
-                // Lógica de guardado que ya tienes...
+                val nombre = etNombre.text.toString()
+                val correo = etCorreo.text.toString()
+                if (nombre.isNotEmpty() && correo.isNotEmpty()) {
+                    usuarioViewModel.actualizarUsuario(Usuario(1, nombre, correo, "1234"))
+                    Toast.makeText(requireContext(), "Actualizado", Toast.LENGTH_SHORT).show()
+                }
             }
             .setNegativeButton("Cancelar", null)
             .show()

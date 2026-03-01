@@ -4,17 +4,16 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.gestionhabitos.model.dao.*
 import com.example.gestionhabitos.model.entitis.*
 
 @Database(
-    // Agregamos Objetivo a las entidades
     entities = [Habito::class, RegistroHabito::class, Categoria::class, Usuario::class, Objetivo::class],
     version = 1,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
-
     abstract fun habitoDao(): HabitoDao
     abstract fun registroHabitoDao(): RegistroHabitoDao
     abstract fun categoriaDao(): CategoriaDao
@@ -31,7 +30,13 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "habitflow_db"
-                ).build()
+                ).addCallback(object : Callback() {
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        super.onCreate(db)
+                        // Usuario inicial por defecto
+                        db.execSQL("INSERT INTO usuarios (id, nombre, correo, contrasena) VALUES (1, 'Jeremías Santiago', 'correo@ejemplo.com', '1234')")
+                    }
+                }).build()
                 INSTANCE = instance
                 instance
             }
