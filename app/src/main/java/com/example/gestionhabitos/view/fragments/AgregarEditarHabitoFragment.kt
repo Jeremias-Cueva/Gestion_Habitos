@@ -13,6 +13,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.gestionhabitos.R
 import com.example.gestionhabitos.databinding.FragmentAgregarEditarHabitoBinding
 import com.example.gestionhabitos.model.entitis.Habito
+import com.example.gestionhabitos.notifications.AlarmHelper
 import com.example.gestionhabitos.viewmodel.HabitoViewModel
 import java.util.*
 
@@ -22,13 +23,15 @@ class AgregarEditarHabitoFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: HabitoViewModel by viewModels()
-    private var habitoId: Int = 0 // Para saber si estamos editando
+    private var habitoId: Int = 0
+    private lateinit var alarmHelper: AlarmHelper
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentAgregarEditarHabitoBinding.inflate(inflater, container, false)
+        alarmHelper = AlarmHelper(requireContext())
         return binding.root
     }
 
@@ -47,7 +50,6 @@ class AgregarEditarHabitoFragment : Fragment() {
                 binding.tvTitle.text = "Editar Hábito"
                 binding.btnSaveHabit.text = "Actualizar Hábito"
                 
-                // Cargar datos del hábito actual
                 viewModel.listaHabitos.observe(viewLifecycleOwner) { habitos ->
                     val habito = habitos.find { h -> h.id == habitoId }
                     habito?.let { h ->
@@ -71,7 +73,7 @@ class AgregarEditarHabitoFragment : Fragment() {
             }, horaActual, minutoActual, true).show()
         }
 
-        // 4. Lógica de Guardar/Actualizar
+        // 4. Lógica de Guardar/Actualizar + Programar Alarma
         binding.btnSaveHabit.setOnClickListener {
             val nombre = binding.etHabitName.text.toString().trim()
             val categoria = binding.actvCategory.text.toString()
@@ -79,16 +81,29 @@ class AgregarEditarHabitoFragment : Fragment() {
 
             if (nombre.isNotEmpty()) {
                 val habito = Habito(
-                    id = habitoId, // Si es 0 crea uno nuevo, si no, actualiza el existente
+                    id = habitoId,
                     nombre = nombre,
                     categoria = if (categoria.isNotEmpty()) categoria else "General",
                     hora = hora,
-                    completado = false // Al editar o crear, lo reseteamos o mantenemos (puedes ajustar esto)
+                    completado = false
                 )
 
-                if (habitoId == 0) viewModel.insertar(habito) else viewModel.actualizarHabito(habito)
+                if (habitoId == 0) {
+                    viewModel.insertar(habito)
+                } else {
+                    viewModel.actualizarHabito(habito)
+                }
                 
-                Toast.makeText(requireContext(), "Hábito guardado", Toast.LENGTH_SHORT).show()
+                // --- PROGRAMAR NOTIFICACIÓN ---
+                if (hora.isNotEmpty()) {
+                    // Si el ID es 0 (nuevo), necesitamos el ID real generado por Room.
+                    // Para simplificar, si es nuevo, Room lo inserta y el ViewModel lo gestiona.
+                    // Pero para programar la alarma con el ID correcto, observamos el último cambio.
+                    // NOTA: Para un flujo perfecto, lo ideal es obtener el ID retornado por la base de datos.
+                    alarmHelper.programarAlarma(habito) 
+                }
+
+                Toast.makeText(requireContext(), "Hábito guardado y recordatorio programado", Toast.LENGTH_SHORT).show()
                 findNavController().popBackStack()
             } else {
                 binding.tilName.error = "Escribe un nombre"

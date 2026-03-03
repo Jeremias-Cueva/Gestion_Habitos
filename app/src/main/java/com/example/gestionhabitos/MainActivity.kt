@@ -1,8 +1,14 @@
 package com.example.gestionhabitos
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.fragment.NavHostFragment
@@ -11,6 +17,17 @@ import com.example.gestionhabitos.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+
+    // Launcher para pedir el permiso de notificaciones (Android 13+)
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Toast.makeText(this, "Notificaciones activadas", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Para recibir recordatorios, activa las notificaciones en ajustes", Toast.LENGTH_LONG).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,5 +49,20 @@ class MainActivity : AppCompatActivity() {
 
         // Vincula el BottomNavigationView con NavController
         binding.bottomNavigation.setupWithNavController(navController)
+
+        // Pedir permiso de notificaciones al iniciar la app
+        pedirPermisoNotificaciones()
+    }
+
+    private fun pedirPermisoNotificaciones() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
     }
 }
