@@ -22,6 +22,7 @@ class AgregarEditarHabitoFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: HabitoViewModel by viewModels()
+    private var habitoId: Int = 0 // Para saber si estamos editando
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,38 +40,58 @@ class AgregarEditarHabitoFragment : Fragment() {
         val adapter = ArrayAdapter(requireContext(), R.layout.item_dropdown_categoria, categorias)
         binding.actvCategory.setAdapter(adapter)
 
-        // 2. Configurar el Selector de Hora
+        // 2. Verificar si es una EDICIÓN
+        arguments?.let {
+            habitoId = it.getInt("habitoId", 0)
+            if (habitoId != 0) {
+                binding.tvTitle.text = "Editar Hábito"
+                binding.btnSaveHabit.text = "Actualizar Hábito"
+                
+                // Cargar datos del hábito actual
+                viewModel.listaHabitos.observe(viewLifecycleOwner) { habitos ->
+                    val habito = habitos.find { h -> h.id == habitoId }
+                    habito?.let { h ->
+                        binding.etHabitName.setText(h.nombre)
+                        binding.actvCategory.setText(h.categoria, false)
+                        binding.etHabitTime.setText(h.hora)
+                    }
+                }
+            }
+        }
+
+        // 3. Selector de Hora
         binding.etHabitTime.setOnClickListener {
             val calendario = Calendar.getInstance()
             val horaActual = calendario.get(Calendar.HOUR_OF_DAY)
             val minutoActual = calendario.get(Calendar.MINUTE)
 
             TimePickerDialog(requireContext(), { _, hora, minuto ->
-                // Formatear la hora para que siempre tenga dos dígitos (ej: 08:05)
                 val horaFormateada = String.format(Locale.getDefault(), "%02d:%02d", hora, minuto)
                 binding.etHabitTime.setText(horaFormateada)
             }, horaActual, minutoActual, true).show()
         }
 
-        // 3. Lógica del botón Guardar
+        // 4. Lógica de Guardar/Actualizar
         binding.btnSaveHabit.setOnClickListener {
             val nombre = binding.etHabitName.text.toString().trim()
-            val categoriaSeleccionada = binding.actvCategory.text.toString()
-            val horaSeleccionada = binding.etHabitTime.text.toString()
+            val categoria = binding.actvCategory.text.toString()
+            val hora = binding.etHabitTime.text.toString()
 
             if (nombre.isNotEmpty()) {
-                val nuevoHabito = Habito(
+                val habito = Habito(
+                    id = habitoId, // Si es 0 crea uno nuevo, si no, actualiza el existente
                     nombre = nombre,
-                    categoria = if (categoriaSeleccionada.isNotEmpty()) categoriaSeleccionada else "General",
-                    hora = horaSeleccionada // Guardamos la hora
+                    categoria = if (categoria.isNotEmpty()) categoria else "General",
+                    hora = hora,
+                    completado = false // Al editar o crear, lo reseteamos o mantenemos (puedes ajustar esto)
                 )
 
-                viewModel.insertar(nuevoHabito)
-                Toast.makeText(requireContext(), "Hábito guardado correctamente", Toast.LENGTH_SHORT).show()
+                if (habitoId == 0) viewModel.insertar(habito) else viewModel.actualizarHabito(habito)
+                
+                Toast.makeText(requireContext(), "Hábito guardado", Toast.LENGTH_SHORT).show()
                 findNavController().popBackStack()
-
             } else {
-                binding.tilName.error = "Por favor, escribe un nombre"
+                binding.tilName.error = "Escribe un nombre"
             }
         }
     }

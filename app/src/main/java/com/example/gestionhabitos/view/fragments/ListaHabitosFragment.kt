@@ -34,9 +34,20 @@ class ListaHabitosFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val adapter = HabitoAdapter(emptyList()) { habito, isChecked ->
-            viewModel.actualizarEstadoHabito(habito, isChecked)
-        }
+        // Configuramos el adaptador con las 3 funciones: Check, Click para editar y Lista
+        val adapter = HabitoAdapter(
+            listaHabitos = emptyList(),
+            onHabitChecked = { habito, isChecked ->
+                viewModel.actualizarEstadoHabito(habito, isChecked)
+            },
+            onHabitClick = { habito ->
+                // Al hacer click, navegamos para editar pasando el ID del hábito
+                val bundle = Bundle().apply {
+                    putInt("habitoId", habito.id)
+                }
+                findNavController().navigate(R.id.action_listaHabitosFragment_to_agregarEditarHabitoFragment, bundle)
+            }
+        )
 
         binding.rvHabitos.adapter = adapter
         binding.rvHabitos.layoutManager = LinearLayoutManager(requireContext())
@@ -45,7 +56,6 @@ class ListaHabitosFragment : Fragment() {
             adapter.updateList(habitos)
         }
 
-        // --- LÓGICA DE ELIMINACIÓN POR DESLIZAMIENTO (SWIPE) CON CONFIRMACIÓN ---
         val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
 
@@ -53,16 +63,14 @@ class ListaHabitosFragment : Fragment() {
                 val posicion = viewHolder.adapterPosition
                 val habitoAEliminar = adapter.listaHabitos[posicion]
 
-                // Diálogo de confirmación para evitar borrados accidentales
                 AlertDialog.Builder(requireContext())
                     .setTitle("¿Eliminar hábito?")
-                    .setMessage("¿Estás seguro de que deseas eliminar '${habitoAEliminar.nombre}'? Esta acción no se puede deshacer.")
+                    .setMessage("¿Estás seguro de que deseas eliminar '${habitoAEliminar.nombre}'?")
                     .setPositiveButton("Eliminar") { _, _ ->
                         viewModel.eliminar(habitoAEliminar)
-                        Toast.makeText(requireContext(), "Hábito eliminado correctamente", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Hábito eliminado", Toast.LENGTH_SHORT).show()
                     }
                     .setNegativeButton("Cancelar") { _, _ ->
-                        // Si cancela, volvemos a mostrar el ítem en su posición original
                         adapter.notifyItemChanged(posicion)
                     }
                     .setCancelable(false)
@@ -70,7 +78,6 @@ class ListaHabitosFragment : Fragment() {
             }
         }
         ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.rvHabitos)
-        // ------------------------------------------------------------------
 
         binding.fabAddHabit.setOnClickListener {
             findNavController().navigate(R.id.action_listaHabitosFragment_to_agregarEditarHabitoFragment)

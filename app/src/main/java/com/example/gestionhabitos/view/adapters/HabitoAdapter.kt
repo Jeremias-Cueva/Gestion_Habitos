@@ -11,9 +11,9 @@ import com.example.gestionhabitos.databinding.ItemHabitoBinding
 import com.example.gestionhabitos.model.entitis.Habito
 
 class HabitoAdapter(
-    // Se cambia a public para poder acceder desde el ItemTouchHelper
     var listaHabitos: List<Habito>,
-    private val onHabitChecked: (Habito, Boolean) -> Unit
+    private val onHabitChecked: (Habito, Boolean) -> Unit,
+    private val onHabitClick: (Habito) -> Unit // Nueva función para manejar el click y editar
 ) : RecyclerView.Adapter<HabitoAdapter.HabitoViewHolder>() {
 
     class HabitoViewHolder(val binding: ItemHabitoBinding) : RecyclerView.ViewHolder(binding.root)
@@ -29,6 +29,14 @@ class HabitoAdapter(
 
         holder.binding.tvHabitName.text = habito.nombre
         holder.binding.tvHabitCategory.text = habito.categoria
+        
+        // Mostramos la hora si existe
+        if (habito.hora.isNotEmpty()) {
+            holder.binding.tvHabitTime.text = habito.hora
+            holder.binding.tvHabitTime.visibility = android.view.View.VISIBLE
+        } else {
+            holder.binding.tvHabitTime.visibility = android.view.View.GONE
+        }
 
         val colorInicial = if (habito.completado)
             ContextCompat.getColor(context, R.color.habit_completed_bg)
@@ -36,6 +44,11 @@ class HabitoAdapter(
             ContextCompat.getColor(context, R.color.surface_white)
 
         holder.binding.root.setCardBackgroundColor(colorInicial)
+
+        // Manejar el click en el card para editar
+        holder.binding.root.setOnClickListener {
+            onHabitClick(habito)
+        }
 
         holder.binding.cbHabitDone.setOnCheckedChangeListener(null)
         holder.binding.cbHabitDone.isChecked = habito.completado
