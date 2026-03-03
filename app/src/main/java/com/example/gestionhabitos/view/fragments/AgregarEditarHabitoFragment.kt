@@ -32,38 +32,22 @@ class AgregarEditarHabitoFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Configurar las opciones con un layout personalizado para el color
+        // 1. Aquí defines las opciones que se verán en el menú
         val categorias = arrayOf("Salud", "Estudio", "Trabajo", "Deporte", "General")
 
-        // Usamos simple_spinner_dropdown_item o un layout propio para forzar el color negro
+        // 2. ESTE ES EL ARRAYADAPTER QUE DEBES CORREGIR
+        // Cambiamos 'android.R.layout.simple_dropdown_item_1line' por TU nuevo layout
         val adapter = ArrayAdapter(
             requireContext(),
-            android.R.layout.simple_spinner_dropdown_item,
+            R.layout.item_dropdown_categoria, // <--- Usa el archivo que creaste para el color negro
             categorias
         )
+
+        // 3. Se vincula al componente visual
         binding.actvCategory.setAdapter(adapter)
+    //Mira franco Si vale la interfaz
 
-        // 2. Lógica del botón Guardar
-        binding.btnSaveHabit.setOnClickListener {
-            val nombre = binding.etHabitName.text.toString().trim()
-            val categoriaSeleccionada = binding.actvCategory.text.toString()
-
-            if (nombre.isNotEmpty()) {
-                val nuevoHabito = Habito(
-                    nombre = nombre,
-                    categoria = if (categoriaSeleccionada.isNotEmpty()) categoriaSeleccionada else "General"
-                )
-
-                viewModel.insertar(nuevoHabito)
-                Toast.makeText(requireContext(), "Hábito guardado correctamente", Toast.LENGTH_SHORT).show()
-                findNavController().popBackStack()
-
-            } else {
-                binding.tilName.error = "Por favor, escribe un nombre"
-            }
-        }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
