@@ -35,10 +35,10 @@ class AgregarEditarHabitoFragment : Fragment() {
         // 1. Configurar las opciones con un layout personalizado para el color
         val categorias = arrayOf("Salud", "Estudio", "Trabajo", "Deporte", "General")
 
-        // Usamos simple_spinner_dropdown_item o un layout propio para forzar el color negro
+        // Usamos nuestro layout personalizado item_dropdown_categoria para forzar el fondo blanco y texto negro
         val adapter = ArrayAdapter(
             requireContext(),
-            android.R.layout.simple_spinner_dropdown_item,
+            R.layout.item_dropdown_categoria,
             categorias
         )
         binding.actvCategory.setAdapter(adapter)
