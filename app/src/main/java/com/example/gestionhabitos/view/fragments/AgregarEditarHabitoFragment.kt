@@ -33,6 +33,7 @@ class AgregarEditarHabitoFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // 1. Aquí defines las opciones que se verán en el menú
+        // 1. Configurar Categorías
         val categorias = arrayOf("Salud", "Estudio", "Trabajo", "Deporte", "General")
 
         // 2. ESTE ES EL ARRAYADAPTER QUE DEBES CORREGIR
@@ -44,8 +45,39 @@ class AgregarEditarHabitoFragment : Fragment() {
         )
 
         // 3. Se vincula al componente visual
+        val adapter = ArrayAdapter(requireContext(), R.layout.item_dropdown_categoria, categorias)
         binding.actvCategory.setAdapter(adapter)
     //Mira franco Si vale la interfaz
+
+        // 2. Configurar el Selector de Hora
+        binding.etHabitTime.setOnClickListener {
+            val calendario = Calendar.getInstance()
+            val horaActual = calendario.get(Calendar.HOUR_OF_DAY)
+            val minutoActual = calendario.get(Calendar.MINUTE)
+
+            TimePickerDialog(requireContext(), { _, hora, minuto ->
+                // Formatear la hora para que siempre tenga dos dígitos (ej: 08:05)
+                val horaFormateada = String.format(Locale.getDefault(), "%02d:%02d", hora, minuto)
+                binding.etHabitTime.setText(horaFormateada)
+            }, horaActual, minutoActual, true).show()
+        }
+
+        // 3. Lógica del botón Guardar
+        binding.btnSaveHabit.setOnClickListener {
+            val nombre = binding.etHabitName.text.toString().trim()
+            val categoriaSeleccionada = binding.actvCategory.text.toString()
+            val horaSeleccionada = binding.etHabitTime.text.toString()
+
+            if (nombre.isNotEmpty()) {
+                val nuevoHabito = Habito(
+                    nombre = nombre,
+                    categoria = if (categoriaSeleccionada.isNotEmpty()) categoriaSeleccionada else "General",
+                    hora = horaSeleccionada // Guardamos la hora
+                )
+
+                viewModel.insertar(nuevoHabito)
+                Toast.makeText(requireContext(), "Hábito guardado correctamente", Toast.LENGTH_SHORT).show()
+                findNavController().popBackStack()
 
     }
     override fun onDestroyView() {

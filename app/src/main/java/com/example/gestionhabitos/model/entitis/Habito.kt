@@ -6,7 +6,8 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "habitos")
 data class Habito(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val nombre: String,    // Asegúrate de que se llame exactamente 'nombre'
-    val categoria: String, // Asegúrate de que se llame exactamente 'categoria'
+    val nombre: String,
+    val categoria: String,
+    val hora: String = "", // Nuevo campo para la hora (ej: "14:30")
     val completado: Boolean = false
 )

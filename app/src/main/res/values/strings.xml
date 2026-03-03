@@ -3,4 +3,10 @@
     <string name="nav_inicio">Inicio</string>
     <string name="nav_habitos">Hábitos</string>
     <string name="nav_progreso">Progreso</string>
+
+    <!-- Dashboard Strings -->
+    <string name="welcome_message">¡Hola, %1$s!</string>
+    <string name="progress_status">%1$d%% de tus hábitos completados</string>
+    <string name="default_user_name">Usuario</string>
+    <string name="quote_format">\"%1$s\"</string>
 </resources>

@@ -66,6 +66,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
 
     // --- RETROFIT CORREGIDO ---
-    implementation("com.squareup.retrofit2:retrofit:2.9.0") // Cambio de com.rawg a com.squareup
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // --- GRÁFICAS (MPAndroidChart) ---
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }
