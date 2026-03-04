@@ -29,21 +29,6 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // --- LÓGICA DE AUTO-LOGIN (DETECTAR SESIÓN) ---
-        // Si Room ya tiene un usuario con ID 1, saltamos el login de inmediato
-        viewModel.datosUsuario.observe(viewLifecycleOwner) { usuario ->
-            if (usuario != null) {
-                findNavController().navigate(R.id.action_loginFragment_to_listaHabitosFragment)
-            }
-        }
-        // ----------------------------------------------
-
-        // Botón para ir a la pantalla de Registro
-        binding.tvIrARegistro.setOnClickListener {
-            findNavController().navigate(R.id.action_loginFragment_to_registroFragment)
-        }
-
-        // Botón de Inicio de Sesión Manual
         binding.btnLogin.setOnClickListener {
             val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
@@ -56,12 +41,9 @@ class LoginFragment : Fragment() {
             }
         }
 
-        // Observador para el resultado del Login manual con MockAPI
         viewModel.loginResult.observe(viewLifecycleOwner) { esExitoso ->
             when (esExitoso) {
                 true -> {
-                    // No hace falta navigate aquí porque al guardar en Room,
-                    // el observador de datosUsuario de arriba se disparará solo.
                     viewModel.resetLoginResult()
                 }
                 false -> {

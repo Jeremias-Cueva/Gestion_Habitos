@@ -16,7 +16,6 @@ interface HabitFlowApiService {
     ): Response<List<Usuario>>
 
     // Para el registro, MockAPI acepta un POST al recurso y devuelve el objeto creado
-    // En tu interfaz de Retrofit agrega:
     @POST("usuarios")
     suspend fun registrarUsuario(@Body usuario: Usuario): Response<Usuario>
 }

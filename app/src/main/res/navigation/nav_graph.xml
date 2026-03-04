@@ -3,30 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/loginFragment">
-
-    <fragment
-        android:id="@+id/loginFragment"
-        android:name="com.example.gestionhabitos.view.fragments.LoginFragment"
-        android:label="Iniciar Sesión"
-        tools:layout="@layout/fragment_login">
-
-        <action
-            android:id="@+id/action_loginFragment_to_listaHabitosFragment"
-            app:destination="@id/listaHabitosFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
-
-        <action
-            android:id="@+id/action_loginFragment_to_registroFragment"
-            app:destination="@id/registroFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
-    </fragment>
+    app:startDestination="@id/dashboardFragment">
 
     <fragment
         android:id="@+id/dashboardFragment"
@@ -34,11 +11,13 @@
         android:label="Panel Principal"
         tools:layout="@layout/fragment_dashboard" />
 
+
     <fragment
         android:id="@+id/listaHabitosFragment"
         android:name="com.example.gestionhabitos.view.fragments.ListaHabitosFragment"
         android:label="Mis Hábitos"
         tools:layout="@layout/fragment_lista_habitos">
+
         <action
             android:id="@+id/action_listaHabitosFragment_to_agregarEditarHabitoFragment"
             app:destination="@id/agregarEditarHabitoFragment"
@@ -53,31 +32,17 @@
         android:name="com.example.gestionhabitos.view.fragments.EstadisticasFragment"
         android:label="Estadísticas"
         tools:layout="@layout/fragment_estadisticas" />
-
     <fragment
         android:id="@+id/perfilFragment"
         android:name="com.example.gestionhabitos.view.fragments.PerfilFragment"
         android:label="Mi Perfil"
-        tools:layout="@layout/fragment_perfil">
-        <action
-            android:id="@+id/action_perfilFragment_to_loginFragment"
-            app:destination="@id/loginFragment"
-            app:enterAnim="@anim/slide_in_left"
-            app:exitAnim="@anim/slide_out_right"
-            app:popUpTo="@id/nav_graph"
-            app:popUpToInclusive="true" />
-    </fragment>
+        tools:layout="@layout/fragment_perfil" />
 
     <fragment
         android:id="@+id/agregarEditarHabitoFragment"
         android:name="com.example.gestionhabitos.view.fragments.AgregarEditarHabitoFragment"
-        android:label="Gestión de Hábito"
+        android:label="Nuevo Hábito"
         tools:layout="@layout/fragment_agregar_editar_habito" />
 
-    <fragment
-        android:id="@+id/registroFragment"
-        android:name="com.example.gestionhabitos.view.fragments.RegistroFragment"
-        android:label="Crear Cuenta"
-        tools:layout="@layout/fragment_registro" />
 
 </navigation>
