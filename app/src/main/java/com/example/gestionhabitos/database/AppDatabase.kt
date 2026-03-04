@@ -40,12 +40,13 @@ abstract class AppDatabase : RoomDatabase() {
                     "habitflow_db"
                 )
                 .addMigrations(MIGRATION_1_2) // Añadimos la migración
-                .addCallback(object : Callback() {
-                    override fun onCreate(db: SupportSQLiteDatabase) {
-                        super.onCreate(db)
-                        db.execSQL("INSERT INTO usuarios (id, nombre, correo, contrasena) VALUES (1, 'Jeremías Santiago', 'correo@ejemplo.com', '1234')")
-                    }
-                })
+                    .addCallback(object : Callback() {
+                        override fun onCreate(db: SupportSQLiteDatabase) {
+                            super.onCreate(db)
+                            // CORRECCIÓN: Usa 'email' y 'password' para que coincida con tu Entity Usuario
+                            db.execSQL("INSERT INTO usuarios (id, nombre, email, password) VALUES (1, 'Jeremías Santiago', 'correo@ejemplo.com', '1234')")
+                        }
+                    })
                 .build()
                 INSTANCE = instance
                 instance

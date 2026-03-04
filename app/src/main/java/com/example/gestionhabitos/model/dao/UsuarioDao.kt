@@ -6,13 +6,19 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UsuarioDao {
-    // Esta es la línea que falta
     @Query("SELECT * FROM usuarios WHERE id = :id")
-    fun obtenerUsuarioPorId(id: Int): Flow<Usuario>
+    fun obtenerUsuarioPorId(id: Int): Flow<Usuario?>
+
+    // Versión para corrutinas (necesaria para el logout)
+    @Query("SELECT * FROM usuarios WHERE id = :id LIMIT 1")
+    suspend fun obtenerUsuarioPorIdDirecto(id: Int): Usuario?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertar(usuario: Usuario)
 
     @Update
     suspend fun actualizar(usuario: Usuario)
+
+    @Delete
+    suspend fun eliminar(usuario: Usuario)
 }
