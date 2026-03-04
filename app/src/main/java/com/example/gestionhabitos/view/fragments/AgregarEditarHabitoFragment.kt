@@ -1,5 +1,6 @@
 package com.example.gestionhabitos.view.fragments
 
+import android.app.TimePickerDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -38,37 +39,30 @@ class AgregarEditarHabitoFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Aquí defines las opciones que se verán en el menú
         // 1. Configurar Categorías
         val categorias = arrayOf("Salud", "Estudio", "Trabajo", "Deporte", "General")
 
-        // 2. ESTE ES EL ARRAYADAPTER QUE DEBES CORREGIR
-        // Cambiamos 'android.R.layout.simple_dropdown_item_1line' por TU nuevo layout
+        // 2. Configurar el Adapter (Usa tu layout personalizado para letras negras)
         val adapter = ArrayAdapter(
             requireContext(),
-            R.layout.item_dropdown_categoria, // <--- Usa el archivo que creaste para el color negro
+            R.layout.item_dropdown_categoria,
             categorias
         )
-
-        // 3. Se vincula al componente visual
-        val adapter = ArrayAdapter(requireContext(), R.layout.item_dropdown_categoria, categorias)
         binding.actvCategory.setAdapter(adapter)
-    //Mira franco Si vale la interfaz
 
-        // 2. Configurar el Selector de Hora
+        // 3. Configurar el Selector de Hora (Lógica nueva del equipo)
         binding.etHabitTime.setOnClickListener {
             val calendario = Calendar.getInstance()
             val horaActual = calendario.get(Calendar.HOUR_OF_DAY)
             val minutoActual = calendario.get(Calendar.MINUTE)
 
             TimePickerDialog(requireContext(), { _, hora, minuto ->
-                // Formatear la hora para que siempre tenga dos dígitos (ej: 08:05)
                 val horaFormateada = String.format(Locale.getDefault(), "%02d:%02d", hora, minuto)
                 binding.etHabitTime.setText(horaFormateada)
             }, horaActual, minutoActual, true).show()
         }
 
-        // 3. Lógica del botón Guardar
+        // 4. Lógica del botón Guardar
         binding.btnSaveHabit.setOnClickListener {
             val nombre = binding.etHabitName.text.toString().trim()
             val categoriaSeleccionada = binding.actvCategory.text.toString()
@@ -78,14 +72,18 @@ class AgregarEditarHabitoFragment : Fragment() {
                 val nuevoHabito = Habito(
                     nombre = nombre,
                     categoria = if (categoriaSeleccionada.isNotEmpty()) categoriaSeleccionada else "General",
-                    hora = horaSeleccionada // Guardamos la hora
+                    hora = horaSeleccionada
                 )
 
                 viewModel.insertar(nuevoHabito)
                 Toast.makeText(requireContext(), "Hábito guardado correctamente", Toast.LENGTH_SHORT).show()
                 findNavController().popBackStack()
-
+            } else {
+                Toast.makeText(requireContext(), "Por favor, escribe un nombre", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
