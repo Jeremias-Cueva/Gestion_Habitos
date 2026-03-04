@@ -14,6 +14,8 @@ import com.example.gestionhabitos.databinding.FragmentAgregarEditarHabitoBinding
 import com.example.gestionhabitos.model.entitis.Habito
 import com.example.gestionhabitos.notifications.AlarmHelper
 import com.example.gestionhabitos.viewmodel.HabitoViewModel
+import java.util.Calendar
+import java.util.Locale
 
 class AgregarEditarHabitoFragment : Fragment() {
 
@@ -53,75 +55,36 @@ class AgregarEditarHabitoFragment : Fragment() {
         binding.actvCategory.setAdapter(adapter)
     //Mira franco Si vale la interfaz
 
-        // 2. Verificar si es una EDICIÓN
-        arguments?.let {
-            habitoId = it.getInt("habitoId", 0)
-            if (habitoId != 0) {
-                binding.tvTitle.text = "Editar Hábito"
-                binding.btnSaveHabit.text = "Actualizar Hábito"
-                
-                viewModel.listaHabitos.observe(viewLifecycleOwner) { habitos ->
-                    val habito = habitos.find { h -> h.id == habitoId }
-                    habito?.let { h ->
-                        binding.etHabitName.setText(h.nombre)
-                        binding.actvCategory.setText(h.categoria, false)
-                        binding.etHabitTime.setText(h.hora)
-                    }
-                }
-            }
-        }
-
-        // 3. Selector de Hora
+        // 2. Configurar el Selector de Hora
         binding.etHabitTime.setOnClickListener {
             val calendario = Calendar.getInstance()
             val horaActual = calendario.get(Calendar.HOUR_OF_DAY)
             val minutoActual = calendario.get(Calendar.MINUTE)
 
             TimePickerDialog(requireContext(), { _, hora, minuto ->
+                // Formatear la hora para que siempre tenga dos dígitos (ej: 08:05)
                 val horaFormateada = String.format(Locale.getDefault(), "%02d:%02d", hora, minuto)
                 binding.etHabitTime.setText(horaFormateada)
             }, horaActual, minutoActual, true).show()
         }
 
-        // 4. Lógica de Guardar/Actualizar + Programar Alarma
+        // 3. Lógica del botón Guardar
         binding.btnSaveHabit.setOnClickListener {
             val nombre = binding.etHabitName.text.toString().trim()
-            val categoria = binding.actvCategory.text.toString()
-            val hora = binding.etHabitTime.text.toString()
+            val categoriaSeleccionada = binding.actvCategory.text.toString()
+            val horaSeleccionada = binding.etHabitTime.text.toString()
 
             if (nombre.isNotEmpty()) {
-                val habito = Habito(
-                    id = habitoId,
+                val nuevoHabito = Habito(
                     nombre = nombre,
-                    categoria = if (categoria.isNotEmpty()) categoria else "General",
-                    hora = hora,
-                    completado = false
+                    categoria = if (categoriaSeleccionada.isNotEmpty()) categoriaSeleccionada else "General",
+                    hora = horaSeleccionada // Guardamos la hora
                 )
 
-                if (habitoId == 0) {
-                    viewModel.insertar(habito)
-                } else {
-                    viewModel.actualizarHabito(habito)
-                }
-                
-                // --- PROGRAMAR NOTIFICACIÓN ---
-                if (hora.isNotEmpty()) {
-                    // Si el ID es 0 (nuevo), necesitamos el ID real generado por Room.
-                    // Para simplificar, si es nuevo, Room lo inserta y el ViewModel lo gestiona.
-                    // Pero para programar la alarma con el ID correcto, observamos el último cambio.
-                    // NOTA: Para un flujo perfecto, lo ideal es obtener el ID retornado por la base de datos.
-                    alarmHelper.programarAlarma(habito) 
-                }
-
-<<<<<<< HEAD
-=======
-                Toast.makeText(requireContext(), "Hábito guardado y recordatorio programado", Toast.LENGTH_SHORT).show()
+                viewModel.insertar(nuevoHabito)
+                Toast.makeText(requireContext(), "Hábito guardado correctamente", Toast.LENGTH_SHORT).show()
                 findNavController().popBackStack()
-            } else {
-                binding.tilName.error = "Escribe un nombre"
-            }
-        }
->>>>>>> bc6b22531e1532a6ba40b07aa945fb89a267c032
+
     }
     override fun onDestroyView() {
         super.onDestroyView()

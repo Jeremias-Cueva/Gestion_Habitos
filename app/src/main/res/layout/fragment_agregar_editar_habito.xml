@@ -57,20 +57,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="none"
-<<<<<<< HEAD
             android:textColor="@android:color/black"
             android:padding="16dp" />
-=======
-            android:textColor="@android:color/black" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Campo para seleccionar la HORA -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilTime"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
         android:hint="Hora del hábito"
         app:startIconDrawable="@android:drawable/ic_menu_recent_history"
         app:layout_constraintTop_toBottomOf="@id/tilCategory">
@@ -82,7 +82,6 @@
             android:focusable="false"
             android:clickable="true"
             android:textColor="@android:color/black" />
->>>>>>> 24e72cbf848ddc1e063da421a4559578c992f3d8
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
@@ -92,12 +91,8 @@
         android:layout_marginTop="32dp"
         android:text="Guardar Hábito"
         android:backgroundTint="@color/primary"
-<<<<<<< HEAD
-        app:layout_constraintTop_toBottomOf="@id/tilCategory"
+        app:layout_constraintTop_toBottomOf="@id/tilTime"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
-=======
-        app:layout_constraintTop_toBottomOf="@id/tilTime" />
->>>>>>> 24e72cbf848ddc1e063da421a4559578c992f3d8
 
 </androidx.constraintlayout.widget.ConstraintLayout>
