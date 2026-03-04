@@ -29,7 +29,7 @@ class NotificationReceiver : BroadcastReceiver() {
         }
 
         val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // Puedes cambiarlo por un icono de campana luego
+            .setSmallIcon(R.drawable.habitlogo) // Puedes cambiarlo por un icono de campana luego
             .setContentTitle("¡Es hora de tu hábito!")
             .setContentText("No olvides completar: $habitName")
             .setPriority(NotificationCompat.PRIORITY_HIGH)

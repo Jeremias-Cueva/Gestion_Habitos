@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.gestionhabitos.databinding.FragmentEstadisticasBinding
 import com.example.gestionhabitos.viewmodel.EstadisticasViewModel
+import com.example.gestionhabitos.viewmodel.UsuarioViewModel
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
@@ -20,6 +21,8 @@ class EstadisticasFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: EstadisticasViewModel by viewModels()
+    // Añadimos el ViewModel del usuario para filtrar los datos
+    private val usuarioViewModel: UsuarioViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,7 +38,14 @@ class EstadisticasFragment : Fragment() {
 
         configurarGraficaBarras()
 
-        // 1. Observar progreso diario (Círculo)
+        // 1. VINCULAR USUARIO PARA QUE EL GRÁFICO NO ESTÉ EN 0
+        usuarioViewModel.datosUsuario.observe(viewLifecycleOwner) { usuario ->
+            usuario?.let {
+                viewModel.cargarDatosUsuario(it.email)
+            }
+        }
+
+        // 2. Observar progreso diario (Círculo de progreso)
         viewModel.estadisticasProgreso.observe(viewLifecycleOwner) { (completados, total) ->
             if (total > 0) {
                 val porcentaje = (completados * 100) / total
@@ -48,12 +58,20 @@ class EstadisticasFragment : Fragment() {
                     porcentaje >= 50 -> "¡Buen trabajo! Vas por buen camino. 💪"
                     else -> "¡Tú puedes! Cada pequeño paso cuenta. ✨"
                 }
+            } else {
+                // Estado inicial o vacío
+                binding.circularProgress.setProgress(0, true)
+                binding.tvPorcentajeGrande.text = "0%"
+                binding.tvTotalStats.text = "Sin hábitos hoy"
+                binding.tvMessage.text = "Agrega hábitos para ver tu progreso."
             }
         }
 
-        // 2. Observar progreso semanal (Gráfica de Barras)
+        // 3. Observar progreso semanal (Gráfica de Barras)
         viewModel.progresoSemanal.observe(viewLifecycleOwner) { progreso ->
-            actualizarGraficaBarras(progreso)
+            if (!progreso.isNullOrEmpty()) {
+                actualizarGraficaBarras(progreso)
+            }
         }
     }
 
@@ -93,12 +111,11 @@ class EstadisticasFragment : Fragment() {
         dataSet.valueTextSize = 10f
         dataSet.setDrawValues(true)
 
-        // Formateador para mostrar fechas en el eje X
         binding.barChart.xAxis.valueFormatter = object : ValueFormatter() {
             override fun getFormattedValue(value: Float): String {
                 val index = value.toInt()
                 return if (index >= 0 && index < progreso.size) {
-                    progreso[index].fecha.substring(5) // Mostrar solo MM-DD
+                    progreso[index].fecha.substring(5)
                 } else ""
             }
         }

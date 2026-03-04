@@ -10,25 +10,35 @@ import kotlinx.coroutines.launch
 class HabitoViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = AppDatabase.getDatabase(application)
-    private val repository: HabitoRepository
 
-    val listaHabitos: LiveData<List<Habito>>
-    val porcentajeProgreso: LiveData<Int>
+    // 1. Inicializamos el repositorio inmediatamente para que esté disponible para los LiveData
+    private val repository: HabitoRepository = HabitoRepository(
+        database.habitoDao(),
+        database.categoriaDao(),
+        database.registroHabitoDao()
+    )
 
-    init {
-        repository = HabitoRepository(
-            database.habitoDao(),
-            database.categoriaDao(),
-            database.registroHabitoDao()
-        )
-        listaHabitos = repository.todosLosHabitos.asLiveData()
-        porcentajeProgreso = listaHabitos.map { habitos ->
-            if (habitos.isEmpty()) 0
-            else {
-                val completados = habitos.count { it.completado }
-                (completados * 100) / habitos.size
-            }
+    // 2. LiveData que contendrá el email del usuario actual
+    private val userEmail = MutableLiveData<String>()
+
+    // 3. Transformamos el email en la lista de hábitos correspondiente
+    // switchMap ahora encuentra al 'repository' ya inicializado
+    val listaHabitos: LiveData<List<Habito>> = userEmail.switchMap { email ->
+        repository.obtenerHabitosDeUsuario(email).asLiveData()
+    }
+
+    // 4. Cálculo del progreso basado en la lista filtrada
+    val porcentajeProgreso: LiveData<Int> = listaHabitos.map { habitos ->
+        if (habitos.isNullOrEmpty()) 0
+        else {
+            val completados = habitos.count { it.completado }
+            (completados * 100) / habitos.size
         }
+    }
+
+    // Método que se llama desde el Fragment al detectar la sesión activa
+    fun cargarHabitosDeUsuario(email: String) {
+        userEmail.value = email
     }
 
     fun insertar(habito: Habito) = viewModelScope.launch {

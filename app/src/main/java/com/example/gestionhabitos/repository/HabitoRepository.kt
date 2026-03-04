@@ -13,22 +13,19 @@ class HabitoRepository(
     private val categoriaDao: CategoriaDao,
     private val registroDao: RegistroHabitoDao
 ) {
-    // Operaciones de Hábitos
-    val todosLosHabitos: Flow<List<Habito>> = habitoDao.obtenerTodosLosHabitos()
+    // Función para obtener la lista filtrada por el email del usuario
+    fun obtenerHabitosDeUsuario(email: String): Flow<List<Habito>> =
+        habitoDao.obtenerHabitosPorUsuario(email)
 
     suspend fun insertarHabito(habito: Habito) = habitoDao.insertar(habito)
     suspend fun actualizarHabito(habito: Habito) = habitoDao.actualizar(habito)
     suspend fun eliminarHabito(habito: Habito) = habitoDao.eliminar(habito)
 
-    // Operaciones de Categorías
     val todasLasCategorias: Flow<List<Categoria>> = categoriaDao.obtenerCategorias()
 
-    // Operaciones de Registros (Historial)
     fun obtenerRegistros(habitoId: Int): Flow<List<RegistroHabito>> =
         registroDao.obtenerRegistrosPorHabito(habitoId)
 
-    suspend fun insertarRegistro(registro: RegistroHabito) = registroDao.insertar(registro)
-    // Dentro de HabitoRepository.kt
     suspend fun registrarActividad(habitoId: Int, estaCompletado: Boolean) {
         val nuevoRegistro = RegistroHabito(
             habitoId = habitoId,

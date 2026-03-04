@@ -18,10 +18,7 @@ class LoginFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: UsuarioViewModel by viewModels()
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -29,53 +26,44 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // --- 1. LÓGICA DE AUTO-LOGIN SEGURA ---
+        // 1. Auto-Login (Solo si la app abre y ya hay alguien)
         viewModel.datosUsuario.observe(viewLifecycleOwner) { usuario ->
-            if (usuario != null) {
-                // Verificamos que el destino actual sea el Login antes de navegar
-                // Esto evita cierres inesperados por navegación duplicada
-                if (findNavController().currentDestination?.id == R.id.loginFragment) {
-                    findNavController().navigate(R.id.action_loginFragment_to_listaHabitosFragment)
-                }
+            if (usuario != null && viewModel.loginResult.value == null) {
+                irALista()
             }
         }
 
-        // --- 2. BOTÓN DE INICIAR SESIÓN ---
+        // 2. Botón Login
         binding.btnLogin.setOnClickListener {
             val email = binding.etEmail.text.toString().trim()
-            val password = binding.etPassword.text.toString().trim()
+            val pass = binding.etPassword.text.toString().trim()
 
-            if (email.isNotEmpty() && password.isNotEmpty()) {
-                viewModel.login(email, password)
-                Toast.makeText(requireContext(), "Iniciando sesión...", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), "Completa los campos", Toast.LENGTH_SHORT).show()
+            if (email.isNotEmpty() && pass.isNotEmpty()) {
+                viewModel.login(email, pass)
+                Toast.makeText(requireContext(), "Iniciando...", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // --- 3. BOTÓN PARA IR AL REGISTRO ---
+        // 3. Botón Registro
         binding.tvIrARegistro.setOnClickListener {
-            if (findNavController().currentDestination?.id == R.id.loginFragment) {
-                findNavController().navigate(R.id.action_loginFragment_to_registroFragment)
-            }
+            findNavController().navigate(R.id.action_loginFragment_to_registroFragment)
         }
 
-        // --- 4. RESULTADO DEL LOGIN ---
+        // 4. Resultado del Login (Manual)
         viewModel.loginResult.observe(viewLifecycleOwner) { esExitoso ->
-            when (esExitoso) {
-                true -> {
-                    Toast.makeText(requireContext(), "¡Bienvenido!", Toast.LENGTH_SHORT).show()
-                    if (findNavController().currentDestination?.id == R.id.loginFragment) {
-                        findNavController().navigate(R.id.action_loginFragment_to_listaHabitosFragment)
-                    }
-                    viewModel.resetLoginResult()
-                }
-                false -> {
-                    Toast.makeText(requireContext(), "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
-                    viewModel.resetLoginResult()
-                }
-                else -> {}
+            if (esExitoso == true) {
+                irALista()
+                viewModel.resetLoginResult()
+            } else if (esExitoso == false) {
+                Toast.makeText(requireContext(), "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
+                viewModel.resetLoginResult()
             }
+        }
+    }
+
+    private fun irALista() {
+        if (findNavController().currentDestination?.id == R.id.loginFragment) {
+            findNavController().navigate(R.id.action_loginFragment_to_listaHabitosFragment)
         }
     }
 

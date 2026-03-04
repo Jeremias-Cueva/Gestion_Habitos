@@ -10,19 +10,28 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val habitoDao = AppDatabase.getDatabase(application).habitoDao()
 
-    // Observamos la lista de hábitos desde Room
-    val listaHabitos: LiveData<List<Habito>> = habitoDao.obtenerTodosLosHabitos().asLiveData()
+    // 1. LiveData para almacenar el email del usuario activo
+    private val userEmail = MutableLiveData<String>()
 
-    // Transformación: Calculamos el porcentaje cada vez que la lista cambia
+    // 2. Usamos switchMap para llamar a obtenerHabitosPorUsuario (la función que sí existe en tu DAO)
+    val listaHabitos: LiveData<List<Habito>> = userEmail.switchMap { email ->
+        habitoDao.obtenerHabitosPorUsuario(email).asLiveData()
+    }
+
+    // 3. Calculamos el porcentaje basado en la lista filtrada
     val porcentajeProgreso: LiveData<Int> = listaHabitos.map { habitos ->
-        if (habitos.isEmpty()) 0
+        if (habitos.isNullOrEmpty()) 0
         else {
             val completados = habitos.count { it.completado }
             (completados * 100) / habitos.size
         }
     }
 
-    // LiveData para la frase del día
+    // Método para cargar los datos del usuario desde el Fragment
+    fun cargarDatosUsuario(email: String) {
+        userEmail.value = email
+    }
+
     private val _fraseMotivacional = MutableLiveData<String>()
     val fraseMotivacional: LiveData<String> get() = _fraseMotivacional
 

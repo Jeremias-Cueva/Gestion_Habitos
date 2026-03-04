@@ -6,8 +6,8 @@ import com.google.gson.annotations.SerializedName
 
 @Entity(tableName = "usuarios")
 data class Usuario(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    @PrimaryKey
+    val id: Int = 1, // Siempre 1 para representar la sesión activa local
 
     @SerializedName("nombre")
     val nombre: String,
@@ -15,7 +15,7 @@ data class Usuario(
     @SerializedName("email")
     val email: String,
 
-    @SerializedName("password") // DEBE decir password para que MockAPI lo guarde
+    @SerializedName("password")
     val password: String,
 
     @SerializedName("fotoUri")

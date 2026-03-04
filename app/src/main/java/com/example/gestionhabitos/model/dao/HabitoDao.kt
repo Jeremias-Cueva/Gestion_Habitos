@@ -7,10 +7,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface HabitoDao {
 
-    @Query("SELECT * FROM habitos ORDER BY id ASC")
-    fun obtenerTodosLosHabitos(): Flow<List<Habito>>
+    // Usamos LOWER para asegurar que el filtro sea exacto sin importar mayúsculas
+    @Query("SELECT * FROM habitos WHERE LOWER(usuarioEmail) = LOWER(:email) ORDER BY id ASC")
+    fun obtenerHabitosPorUsuario(email: String): Flow<List<Habito>>
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertar(habito: Habito)
 
     @Update

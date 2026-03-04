@@ -16,12 +16,15 @@ import com.example.gestionhabitos.R
 import com.example.gestionhabitos.databinding.FragmentListaHabitosBinding
 import com.example.gestionhabitos.view.adapters.HabitoAdapter
 import com.example.gestionhabitos.viewmodel.HabitoViewModel
+import com.example.gestionhabitos.viewmodel.UsuarioViewModel
 
 class ListaHabitosFragment : Fragment() {
 
     private var _binding: FragmentListaHabitosBinding? = null
     private val binding get() = _binding!!
+
     private val viewModel: HabitoViewModel by viewModels()
+    private val usuarioViewModel: UsuarioViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,14 +37,13 @@ class ListaHabitosFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Configuramos el adaptador con las 3 funciones: Check, Click para editar y Lista
+        // CONFIGURACIÓN DEL ADAPTADOR
         val adapter = HabitoAdapter(
             listaHabitos = emptyList(),
             onHabitChecked = { habito, isChecked ->
                 viewModel.actualizarEstadoHabito(habito, isChecked)
             },
             onHabitClick = { habito ->
-                // Al hacer click, navegamos para editar pasando el ID del hábito
                 val bundle = Bundle().apply {
                     putInt("habitoId", habito.id)
                 }
@@ -52,10 +54,27 @@ class ListaHabitosFragment : Fragment() {
         binding.rvHabitos.adapter = adapter
         binding.rvHabitos.layoutManager = LinearLayoutManager(requireContext())
 
-        viewModel.listaHabitos.observe(viewLifecycleOwner) { habitos ->
-            adapter.updateList(habitos)
+        // 1. VÍNCULO CRÍTICO: VALIDAR SESIÓN Y FILTRAR
+        usuarioViewModel.datosUsuario.observe(viewLifecycleOwner) { usuario ->
+            if (usuario != null) {
+                binding.rvHabitos.visibility = View.VISIBLE
+                // ESTA LÍNEA ES LA QUE HACE QUE APAREZCAN TUS HÁBITOS:
+                // Le pasamos el email al ViewModel para que Room sepa qué buscar.
+                viewModel.cargarHabitosDeUsuario(usuario.email)
+            } else {
+                binding.rvHabitos.visibility = View.GONE
+                // Opcional: Si no hay sesión, volver al login
+                // findNavController().navigate(R.id.loginFragment)
+            }
         }
 
+        // 2. OBSERVAR LA LISTA FILTRADA
+        viewModel.listaHabitos.observe(viewLifecycleOwner) { habitos ->
+            // Si el ViewModel ya tiene el email, aquí llegarán solo los del usuario
+            adapter.updateList(habitos ?: emptyList())
+        }
+
+        // Lógica de Swiped para eliminar
         val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
 

@@ -29,14 +29,17 @@ class DashboardFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Configurar el Saludo Dinámico
+        // 1. Configurar el Saludo y Cargar Datos Filtrados
         usuarioViewModel.datosUsuario.observe(viewLifecycleOwner) { usuario ->
             if (usuario != null) {
-                // Tomamos solo el primer nombre para un saludo más natural
+                // --- CAMBIO CRÍTICO AQUÍ ---
+                // Le pasamos el email al DashboardViewModel para que filtre los hábitos
+                dashboardViewModel.cargarDatosUsuario(usuario.email)
+
                 val primerNombre = usuario.nombre.split(" ")[0]
                 binding.tvWelcome.text = getString(R.string.welcome_message, primerNombre)
             } else {
-                binding.tvWelcome.text = getString(R.string.welcome_message, getString(R.string.default_user_name))
+                binding.tvWelcome.text = getString(R.string.welcome_message, "Usuario")
             }
         }
 
@@ -49,8 +52,9 @@ class DashboardFragment : Fragment() {
             }
         }
 
-        // 3. Progreso Diario
+        // 3. Progreso Diario (Sincronizado con el usuario actual)
         dashboardViewModel.porcentajeProgreso.observe(viewLifecycleOwner) { progreso ->
+            // Usamos el progreso filtrado por el email que pasamos en el punto 1
             binding.progressHabitos.setProgress(progreso ?: 0, true)
             binding.tvPorcentaje.text = getString(R.string.progress_status, progreso ?: 0)
         }

@@ -9,90 +9,72 @@ import com.example.gestionhabitos.model.api.RetrofitClient
 import com.example.gestionhabitos.model.repository.RegistroRepository
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class UsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getDatabase(application)
     private val registroRepo = RegistroRepository()
 
-    // Observa el usuario con ID 1 (Sesión activa en Room)
-    val datosUsuario: LiveData<Usuario?> = db.usuarioDao().obtenerUsuarioPorId(1).asLiveData()
+    // Siempre observa el ID 1 para la sesión
+    val datosUsuario: LiveData<Usuario?> = db.usuarioDao().obtenerSesionActiva().asLiveData()
 
-    // Estados para la UI
     private val _loginResult = MutableLiveData<Boolean?>()
     val loginResult: LiveData<Boolean?> get() = _loginResult
 
     private val _registroExitoso = MutableLiveData<Boolean?>()
     val registroExitoso: LiveData<Boolean?> get() = _registroExitoso
 
-    // --- LÓGICA DE LOGIN ---
-    fun login(emailIngresado: String, passwordIngresada: String) = viewModelScope.launch(Dispatchers.IO) {
+    fun login(email: String, pass: String) = viewModelScope.launch {
         try {
-            // Buscamos en MockAPI por el email (limpiando espacios)
-            val response = RetrofitClient.habitFlow.buscarUsuarioPorEmail(emailIngresado.trim())
+            // 1. Petición de red en hilo IO
+            val response = withContext(Dispatchers.IO) {
+                RetrofitClient.habitFlow.buscarUsuarioPorEmail(email.trim())
+            }
 
             if (response.isSuccessful) {
-                val listaUsuarios = response.body()
-
-                // Filtro manual estricto para evitar errores de MockAPI
-                val usuarioEncontrado = listaUsuarios?.find {
-                    it.email.trim().lowercase() == emailIngresado.trim().lowercase() &&
-                            it.password.trim() == passwordIngresada.trim()
+                val user = response.body()?.find {
+                    it.email.equals(email.trim(), true) && it.password == pass.trim()
                 }
 
-                if (usuarioEncontrado != null) {
-                    // Guardamos en Room forzando el ID 1 para activar el Auto-Login
-                    val usuarioParaSesion = usuarioEncontrado.copy(id = 1)
-                    db.usuarioDao().insertar(usuarioParaSesion)
-                    _loginResult.postValue(true)
+                if (user != null) {
+                    // 2. FORZAR guardado en Room y ESPERAR a que termine
+                    withContext(Dispatchers.IO) {
+                        db.usuarioDao().borrarPorId(1)
+                        db.usuarioDao().insertar(user.copy(id = 1))
+                    }
+                    // 3. Solo después de guardar, notificamos éxito
+                    _loginResult.value = true
                 } else {
-                    _loginResult.postValue(false)
+                    _loginResult.value = false
                 }
             } else {
-                _loginResult.postValue(false)
+                _loginResult.value = false
             }
         } catch (e: Exception) {
-            Log.e("API_ERROR", "Error en login: ${e.message}")
-            _loginResult.postValue(false)
+            Log.e("LOGIN_ERROR", e.message ?: "Error desconocido")
+            _loginResult.value = false
         }
     }
 
-    // --- LÓGICA DE REGISTRO ---
     fun registrar(nombre: String, email: String, pass: String) = viewModelScope.launch(Dispatchers.IO) {
         try {
-            // Creamos el objeto sin ID (MockAPI lo genera automáticamente)
-            val nuevoUsuario = Usuario(
-                nombre = nombre,
-                email = email.trim(),
-                password = pass.trim()
-            )
-
+            val nuevoUsuario = Usuario(nombre = nombre, email = email.trim(), password = pass.trim())
             val response = registroRepo.registrarUsuario(nuevoUsuario)
-
-            if (response.isSuccessful) {
-                _registroExitoso.postValue(true)
-            } else {
-                Log.e("API_ERROR", "Error de servidor: ${response.code()}")
-                _registroExitoso.postValue(false)
-            }
+            _registroExitoso.postValue(response.isSuccessful)
         } catch (e: Exception) {
-            Log.e("API_ERROR", "Falla de red: ${e.message}")
             _registroExitoso.postValue(false)
         }
     }
 
-    // --- LÓGICA DE CIERRE DE SESIÓN ---
-    fun logout() = viewModelScope.launch(Dispatchers.IO) {
-        // Borra el registro del ID 1 para que el Auto-Login pida credenciales de nuevo
-        db.usuarioDao().borrarPorId(1)
-    }
-
-    // --- LIMPIEZA DE ESTADOS ---
-    fun resetLoginResult() { _loginResult.postValue(null) }
-    fun resetRegistroStatus() { _registroExitoso.postValue(null) }
-
-    // Actualización de perfil
     fun actualizarUsuario(usuario: Usuario) = viewModelScope.launch(Dispatchers.IO) {
         db.usuarioDao().actualizar(usuario)
     }
+
+    fun logout() = viewModelScope.launch(Dispatchers.IO) {
+        db.usuarioDao().borrarPorId(1)
+    }
+
+    fun resetLoginResult() { _loginResult.value = null }
+    fun resetRegistroStatus() { _registroExitoso.value = null }
 }
