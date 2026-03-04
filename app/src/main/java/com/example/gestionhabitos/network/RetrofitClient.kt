@@ -1,16 +1,21 @@
 package com.example.gestionhabitos.model.api
 
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
     private const val ZEN_URL = "https://zenquotes.io/api/"
-
-    // URL DE MOCKAPI (Reemplaza a la IP local y al servidor de Node)
-    // Se añade un "/" al final para que Retrofit funcione correctamente
     private const val MOCK_API_URL = "https://69a84ac637caab4b8c615068.mockapi.io/"
 
-    // Instancia para las frases motivacionales
+    // Cliente para evitar el error "Connection timed out"
+    private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .build()
+
     val frases: FraseApiService by lazy {
         Retrofit.Builder()
             .baseUrl(ZEN_URL)
@@ -19,10 +24,10 @@ object RetrofitClient {
             .create(FraseApiService::class.java)
     }
 
-    // Instancia para HabitFlow (MockAPI)
     val habitFlow: HabitFlowApiService by lazy {
         Retrofit.Builder()
             .baseUrl(MOCK_API_URL)
+            .client(okHttpClient) // Aplicamos el cliente con más tiempo
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(HabitFlowApiService::class.java)

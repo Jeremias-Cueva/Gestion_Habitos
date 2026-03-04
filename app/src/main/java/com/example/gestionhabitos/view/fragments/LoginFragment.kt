@@ -29,25 +29,49 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // --- 1. LÓGICA DE AUTO-LOGIN SEGURA ---
+        viewModel.datosUsuario.observe(viewLifecycleOwner) { usuario ->
+            if (usuario != null) {
+                // Verificamos que el destino actual sea el Login antes de navegar
+                // Esto evita cierres inesperados por navegación duplicada
+                if (findNavController().currentDestination?.id == R.id.loginFragment) {
+                    findNavController().navigate(R.id.action_loginFragment_to_listaHabitosFragment)
+                }
+            }
+        }
+
+        // --- 2. BOTÓN DE INICIAR SESIÓN ---
         binding.btnLogin.setOnClickListener {
             val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
 
             if (email.isNotEmpty() && password.isNotEmpty()) {
                 viewModel.login(email, password)
-                Toast.makeText(requireContext(), "Validando credenciales...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Iniciando sesión...", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(requireContext(), "Completa todos los campos", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Completa los campos", Toast.LENGTH_SHORT).show()
             }
         }
 
+        // --- 3. BOTÓN PARA IR AL REGISTRO ---
+        binding.tvIrARegistro.setOnClickListener {
+            if (findNavController().currentDestination?.id == R.id.loginFragment) {
+                findNavController().navigate(R.id.action_loginFragment_to_registroFragment)
+            }
+        }
+
+        // --- 4. RESULTADO DEL LOGIN ---
         viewModel.loginResult.observe(viewLifecycleOwner) { esExitoso ->
             when (esExitoso) {
                 true -> {
+                    Toast.makeText(requireContext(), "¡Bienvenido!", Toast.LENGTH_SHORT).show()
+                    if (findNavController().currentDestination?.id == R.id.loginFragment) {
+                        findNavController().navigate(R.id.action_loginFragment_to_listaHabitosFragment)
+                    }
                     viewModel.resetLoginResult()
                 }
                 false -> {
-                    Toast.makeText(requireContext(), "Email o contraseña incorrectos", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
                     viewModel.resetLoginResult()
                 }
                 else -> {}

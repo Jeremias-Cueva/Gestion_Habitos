@@ -11,7 +11,7 @@ import com.example.gestionhabitos.model.entitis.*
 
 @Database(
     entities = [Habito::class, RegistroHabito::class, Categoria::class, Usuario::class, Objetivo::class],
-    version = 2, // Subimos la versión a 2 para reflejar el cambio en la tabla
+    version = 3, // Subimos a 3 para forzar la limpieza tras desinstalar
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -25,13 +25,6 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        // Definimos la migración para no perder los datos actuales
-        val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE habitos ADD COLUMN hora TEXT NOT NULL DEFAULT ''")
-            }
-        }
-
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -39,15 +32,9 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "habitflow_db"
                 )
-                .addMigrations(MIGRATION_1_2) // Añadimos la migración
-                    .addCallback(object : Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-                            // CORRECCIÓN: Usa 'email' y 'password' para que coincida con tu Entity Usuario
-                            db.execSQL("INSERT INTO usuarios (id, nombre, email, password) VALUES (1, 'Jeremías Santiago', 'correo@ejemplo.com', '1234')")
-                        }
-                    })
-                .build()
+                    // Esto permite que la base de datos se reconstruya si cambias algo en las entities
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

@@ -44,19 +44,22 @@
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Cerrar Sesión")
                     .setMessage("¿Estás seguro de que deseas salir de HabitFlow?")
+// Dentro del setPositiveButton de tu PerfilFragment.kt
+
                     .setPositiveButton("Salir") { _, _ ->
                         // 1. Borramos los datos locales en Room
                         usuarioViewModel.logout()
 
-                        // 2. Navegamos al Login limpiando el historial correctamente
-                        // Nota: Se agregan paréntesis vacíos antes de la llave para llamar a la función de extensión correcta
-                        findNavController().navigate(R.id.action_perfilFragment_to_loginFragment, null,
+                        // 2. Navegamos al Login eliminando todo el historial anterior
+                        findNavController().navigate(
+                            R.id.action_perfilFragment_to_loginFragment,
+                            null,
                             androidx.navigation.NavOptions.Builder()
-                                .setPopUpTo(R.id.nav_graph, true)
+                                .setPopUpTo(R.id.nav_graph, true) // Esto limpia el stack de navegación
                                 .build()
                         )
 
-                        Toast.makeText(requireContext(), "Sesión cerrada correctamente", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Sesión cerrada", Toast.LENGTH_SHORT).show()
                     }
                     .setNegativeButton("Cancelar", null)
                     .show()

@@ -8,6 +8,7 @@ data class Habito(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val nombre: String,
     val categoria: String,
-    val hora: String = "", // Nuevo campo para la hora (ej: "14:30")
-    val completado: Boolean = false
+    val hora: String = "",
+    val completado: Boolean = false,
+    val usuarioEmail: String // VITAL para filtrar en MockAPI
 )
