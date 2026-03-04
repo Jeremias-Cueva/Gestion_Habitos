@@ -15,14 +15,15 @@
 
         <TextView
             android:id="@+id/tvHabitName"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Hábito de ejemplo"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/cbHabitDone" />
 
         <TextView
             android:id="@+id/tvHabitCategory"
@@ -32,6 +33,18 @@
             android:textColor="@color/text_secondary"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvHabitName" />
+
+        <TextView
+            android:id="@+id/tvHabitTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="12:00"
+            android:textColor="@color/primary"
+            android:textStyle="italic"
+            app:layout_constraintBottom_toBottomOf="@id/tvHabitCategory"
+            app:layout_constraintStart_toEndOf="@id/tvHabitCategory"
+            app:layout_constraintTop_toTopOf="@id/tvHabitCategory" />
 
         <CheckBox
             android:id="@+id/cbHabitDone"

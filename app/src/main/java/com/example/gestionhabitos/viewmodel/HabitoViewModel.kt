@@ -9,7 +9,6 @@ import kotlinx.coroutines.launch
 
 class HabitoViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Obtenemos las instancias de los DAOs
     private val database = AppDatabase.getDatabase(application)
     private val repository: HabitoRepository
 
@@ -17,16 +16,12 @@ class HabitoViewModel(application: Application) : AndroidViewModel(application) 
     val porcentajeProgreso: LiveData<Int>
 
     init {
-        // Inicializamos el repositorio con todos los DAOs necesarios
         repository = HabitoRepository(
             database.habitoDao(),
             database.categoriaDao(),
             database.registroHabitoDao()
         )
-
-        // Usamos el repositorio como única fuente de datos
         listaHabitos = repository.todosLosHabitos.asLiveData()
-
         porcentajeProgreso = listaHabitos.map { habitos ->
             if (habitos.isEmpty()) 0
             else {
@@ -40,13 +35,14 @@ class HabitoViewModel(application: Application) : AndroidViewModel(application) 
         repository.insertarHabito(habito)
     }
 
-    // Esta es la función que usaremos para el Checkbox
+    fun actualizarHabito(habito: Habito) = viewModelScope.launch {
+        repository.actualizarHabito(habito)
+    }
+
     fun actualizarEstadoHabito(habito: Habito, isChecked: Boolean) {
         viewModelScope.launch {
             val habitoActualizado = habito.copy(completado = isChecked)
             repository.actualizarHabito(habitoActualizado)
-
-            // Guardamos el registro histórico automáticamente
             repository.registrarActividad(habito.id, isChecked)
         }
     }
