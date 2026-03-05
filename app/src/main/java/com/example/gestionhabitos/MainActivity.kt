@@ -5,51 +5,95 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.viewpager2.widget.ViewPager2
+import com.example.gestionhabitos.R
+import com.example.gestionhabitos.databinding.ActivityMainBinding
+import com.example.gestionhabitos.view.adapters.MainViewPagerAdapter
+import com.example.gestionhabitos.viewmodel.UsuarioViewModel
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+    private val usuarioViewModel: UsuarioViewModel by viewModels()
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Toast.makeText(this, "Notificaciones activadas", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        enableEdgeToEdge()
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // 1. PEDIR PERMISO DE NOTIFICACIONES (Obligatorio para Android 13+)
-        solicitarPermisoNotificaciones()
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
 
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+        pedirPermisoNotificaciones()
 
-        bottomNav.setupWithNavController(navController)
-
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            when (destination.id) {
-                R.id.loginFragment, R.id.registroFragment -> {
-                    bottomNav.visibility = View.GONE
-                }
-                else -> {
-                    bottomNav.visibility = View.VISIBLE
-                }
+        // OBSERVADOR DINÁMICO DE SESIÓN
+        // Si detecta un usuario en Room, activa el ViewPager y el BottomNav
+        usuarioViewModel.datosUsuario.observe(this) { usuario ->
+            if (usuario != null) {
+                mostrarPantallaPrincipal()
+            } else {
+                mostrarPantallaLogin()
             }
         }
     }
 
-    private fun solicitarPermisoNotificaciones() {
+    private fun mostrarPantallaPrincipal() {
+        binding.viewPager.visibility = View.VISIBLE
+        binding.navHostFragment.visibility = View.GONE
+        binding.bottomNavigation.visibility = View.VISIBLE
+
+        if (binding.viewPager.adapter == null) {
+            val adapter = MainViewPagerAdapter(this)
+            binding.viewPager.adapter = adapter
+
+            binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    super.onPageSelected(position)
+                    binding.bottomNavigation.menu.getItem(position).isChecked = true
+                }
+            })
+
+            binding.bottomNavigation.setOnItemSelectedListener { item ->
+                when (item.itemId) {
+                    R.id.dashboardFragment -> binding.viewPager.currentItem = 0
+                    R.id.listaHabitosFragment -> binding.viewPager.currentItem = 1
+                    R.id.estadisticasFragment -> binding.viewPager.currentItem = 2
+                    R.id.perfilFragment -> binding.viewPager.currentItem = 3
+                }
+                true
+            }
+        }
+    }
+
+    private fun mostrarPantallaLogin() {
+        binding.viewPager.visibility = View.GONE
+        binding.navHostFragment.visibility = View.VISIBLE
+        binding.bottomNavigation.visibility = View.GONE
+    }
+
+    private fun pedirPermisoNotificaciones() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    101
-                )
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
