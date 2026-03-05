@@ -1,12 +1,11 @@
-package com.example.gestionhabitos.model.repository
+package com.example.gestionhabitos.repository
 
-import com.example.gestionhabitos.model.api.RetrofitClient
 import com.example.gestionhabitos.model.entitis.Usuario
+import com.example.gestionhabitos.network.RetrofitClient
 import retrofit2.Response
 
 class RegistroRepository {
     suspend fun registrarUsuario(usuario: Usuario): Response<Usuario> {
-        // Llama directamente a la interfaz que ya definimos
         return RetrofitClient.habitFlow.registrarUsuario(usuario)
     }
 }

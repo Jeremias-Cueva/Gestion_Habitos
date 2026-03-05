@@ -49,7 +49,12 @@ class LoginFragment : Fragment() {
             findNavController().navigate(R.id.action_loginFragment_to_registroFragment)
         }
 
-        // 4. Resultado del Login (Manual)
+        // 4. Botón Olvidé mi contraseña
+        binding.tvForgotPassword.setOnClickListener {
+            findNavController().navigate(R.id.action_loginFragment_to_recuperarPasswordFragment)
+        }
+
+        // 5. Resultado del Login (Manual)
         viewModel.loginResult.observe(viewLifecycleOwner) { esExitoso ->
             if (esExitoso == true) {
                 irALista()

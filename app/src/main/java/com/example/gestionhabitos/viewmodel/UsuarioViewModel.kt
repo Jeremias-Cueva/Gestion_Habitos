@@ -5,8 +5,8 @@ import android.util.Log
 import androidx.lifecycle.*
 import com.example.gestionhabitos.database.AppDatabase
 import com.example.gestionhabitos.model.entitis.Usuario
-import com.example.gestionhabitos.model.api.RetrofitClient
-import com.example.gestionhabitos.model.repository.RegistroRepository
+import com.example.gestionhabitos.network.RetrofitClient
+import com.example.gestionhabitos.repository.RegistroRepository
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,7 +16,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     private val db = AppDatabase.getDatabase(application)
     private val registroRepo = RegistroRepository()
 
-    // Siempre observa el ID 1 para la sesión
+    // Observa la sesión activa local
     val datosUsuario: LiveData<Usuario?> = db.usuarioDao().obtenerSesionActiva().asLiveData()
 
     private val _loginResult = MutableLiveData<Boolean?>()
@@ -27,7 +27,6 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
     fun login(email: String, pass: String) = viewModelScope.launch {
         try {
-            // 1. Petición de red en hilo IO
             val response = withContext(Dispatchers.IO) {
                 RetrofitClient.habitFlow.buscarUsuarioPorEmail(email.trim())
             }
@@ -38,12 +37,10 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
                 }
 
                 if (user != null) {
-                    // 2. FORZAR guardado en Room y ESPERAR a que termine
                     withContext(Dispatchers.IO) {
                         db.usuarioDao().borrarPorId(1)
                         db.usuarioDao().insertar(user.copy(id = 1))
                     }
-                    // 3. Solo después de guardar, notificamos éxito
                     _loginResult.value = true
                 } else {
                     _loginResult.value = false
