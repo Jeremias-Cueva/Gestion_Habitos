@@ -2,10 +2,7 @@ package com.example.gestionhabitos.network
 
 import com.example.gestionhabitos.model.entitis.Usuario
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.POST
-import retrofit2.http.GET
-import retrofit2.http.Query
+import retrofit2.http.*
 
 interface HabitFlowApiService {
 
@@ -16,4 +13,11 @@ interface HabitFlowApiService {
 
     @POST("usuarios")
     suspend fun registrarUsuario(@Body usuario: Usuario): Response<Usuario>
+
+    // Nuevo método para actualizar la contraseña (o cualquier dato) del usuario en MockAPI
+    @PUT("usuarios/{id}")
+    suspend fun actualizarUsuario(
+        @Path("id") id: String,
+        @Body usuario: Usuario
+    ): Response<Usuario>
 }

@@ -25,6 +25,10 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     private val _registroExitoso = MutableLiveData<Boolean?>()
     val registroExitoso: LiveData<Boolean?> get() = _registroExitoso
 
+    // Nueva LiveData para manejar mensajes de error específicos
+    private val _errorRegistro = MutableLiveData<String?>()
+    val errorRegistro: LiveData<String?> get() = _errorRegistro
+
     fun login(email: String, pass: String) = viewModelScope.launch {
         try {
             val response = withContext(Dispatchers.IO) {
@@ -54,13 +58,33 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun registrar(nombre: String, email: String, pass: String) = viewModelScope.launch(Dispatchers.IO) {
+    fun registrar(nombre: String, email: String, pass: String) = viewModelScope.launch {
         try {
+            _errorRegistro.value = null // Limpiamos errores previos
+
+            // 1. VERIFICAR SI EL CORREO YA EXISTE
+            val checkResponse = withContext(Dispatchers.IO) {
+                RetrofitClient.habitFlow.buscarUsuarioPorEmail(email.trim())
+            }
+
+            if (checkResponse.isSuccessful && !checkResponse.body().isNullOrEmpty()) {
+                // Si el body no está vacío, significa que el correo ya está registrado
+                _errorRegistro.value = "Este correo ya está registrado. Intenta con otro."
+                _registroExitoso.value = false
+                return@launch
+            }
+
+            // 2. SI NO EXISTE, PROCEDER AL REGISTRO
             val nuevoUsuario = Usuario(nombre = nombre, email = email.trim(), password = pass.trim())
-            val response = registroRepo.registrarUsuario(nuevoUsuario)
-            _registroExitoso.postValue(response.isSuccessful)
+            val response = withContext(Dispatchers.IO) {
+                registroRepo.registrarUsuario(nuevoUsuario)
+            }
+            
+            _registroExitoso.value = response.isSuccessful
+            
         } catch (e: Exception) {
-            _registroExitoso.postValue(false)
+            _errorRegistro.value = "Error de conexión al intentar registrar."
+            _registroExitoso.value = false
         }
     }
 
@@ -73,5 +97,8 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun resetLoginResult() { _loginResult.value = null }
-    fun resetRegistroStatus() { _registroExitoso.value = null }
+    fun resetRegistroStatus() { 
+        _registroExitoso.value = null
+        _errorRegistro.value = null
+    }
 }
