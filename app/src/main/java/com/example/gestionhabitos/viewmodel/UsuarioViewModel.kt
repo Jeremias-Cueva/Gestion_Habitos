@@ -64,7 +64,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
                 return@launch
             }
 
-            // 2. Crear objeto (ID 0 para que Supabase asigne el real)
+            // 2. Crear objeto usuario
             val nuevoUsuario = Usuario(
                 nombre = nombre,
                 email = email.trim(),
@@ -77,13 +77,12 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
             }
 
             if (response.isSuccessful) {
-                // 🚩 ¡AQUÍ ESTÁ EL CAMBIO!
-                // Si la nube lo aceptó, lo guardamos en el teléfono para iniciar sesión
-                withContext(Dispatchers.IO) {
-                    db.usuarioDao().borrarSesion()
-                    db.usuarioDao().insertar(nuevoUsuario)
-                }
+
+                // 🚨 NO GUARDAMOS SESIÓN AQUÍ
+                // Solo confirmamos registro
+
                 _registroExitoso.value = true
+
             } else {
                 _errorRegistro.value = "Error al guardar en la nube."
                 _registroExitoso.value = false

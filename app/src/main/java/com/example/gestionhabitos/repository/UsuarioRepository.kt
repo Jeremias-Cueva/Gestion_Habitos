@@ -8,8 +8,9 @@ class UsuarioRepository {
 
     // 1. Busca el usuario para el Login o validación
     suspend fun buscarUsuarioPorEmail(email: String): Response<List<Usuario>> {
-        // Le agregamos "eq." para que Supabase entienda que es una búsqueda exacta
-        return SupabaseClient.apiService.buscarUsuarioPorEmail("eq.$email")
+        // Limpiamos espacios y pasamos a minúsculas para que coincida con la DB
+        val emailLimpio = email.trim().lowercase()
+        return SupabaseClient.apiService.buscarUsuarioPorEmail("eq.$emailLimpio")
     }
 
     // 2. Registra el usuario nuevo

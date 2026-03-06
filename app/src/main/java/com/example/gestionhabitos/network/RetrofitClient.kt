@@ -1,5 +1,6 @@
 package com.example.gestionhabitos.network
 
+import com.example.gestionhabitos.model.api.FraseApiService // 🚩 Importación explícita
 import com.example.gestionhabitos.model.api.SendGridApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -17,14 +18,16 @@ object RetrofitClient {
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    val frases: com.example.gestionhabitos.model.api.FraseApiService by lazy {
+    // 🚩 Corregido: Uso de la interfaz con import simple
+    val frases: FraseApiService by lazy {
         Retrofit.Builder()
             .baseUrl(ZEN_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(com.example.gestionhabitos.model.api.FraseApiService::class.java)
+            .create(FraseApiService::class.java)
     }
 
+    // Nota: Si HabitFlowApiService te da error, asegúrate de que también esté importado
     val habitFlow: HabitFlowApiService by lazy {
         Retrofit.Builder()
             .baseUrl(MOCK_API_URL)

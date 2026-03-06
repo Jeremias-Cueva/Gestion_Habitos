@@ -54,13 +54,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun mostrarPantallaPrincipal() {
-        binding.viewPager.visibility = View.VISIBLE
-        binding.bottomNavigation.visibility = View.VISIBLE
+    // Función para que los fragmentos oculten/muestren la barra inferior y el viewpager
+    fun setNavegacionPrincipal(visible: Boolean) {
+        if (visible) {
+            binding.viewPager.visibility = View.VISIBLE
+            binding.bottomNavigation.visibility = View.VISIBLE
+            binding.navHostFragment.visibility = View.INVISIBLE
+        } else {
+            binding.viewPager.visibility = View.GONE
+            binding.bottomNavigation.visibility = View.GONE
+            binding.navHostFragment.visibility = View.VISIBLE
+        }
+    }
 
-        // 🛡️ CORRECCIÓN: Usamos el nombre exacto del XML a través de binding
-        // Cambiamos GONE por INVISIBLE para que el NavController no se destruya
-        binding.navHostFragment.visibility = View.INVISIBLE
+    private fun mostrarPantallaPrincipal() {
+        setNavegacionPrincipal(true)
 
         if (binding.viewPager.adapter == null) {
             val adapter = MainViewPagerAdapter(this)
@@ -78,7 +86,8 @@ class MainActivity : AppCompatActivity() {
                     R.id.dashboardFragment -> binding.viewPager.currentItem = 0
                     R.id.listaHabitosFragment -> binding.viewPager.currentItem = 1
                     R.id.estadisticasFragment -> binding.viewPager.currentItem = 2
-                    R.id.perfilFragment -> binding.viewPager.currentItem = 3
+                    R.id.objetivoFragment -> binding.viewPager.currentItem = 3
+                    R.id.perfilFragment -> binding.viewPager.currentItem = 4
                 }
                 true
             }
@@ -88,7 +97,6 @@ class MainActivity : AppCompatActivity() {
     private fun mostrarPantallaLogin() {
         binding.viewPager.visibility = View.GONE
         binding.bottomNavigation.visibility = View.GONE
-        // Aseguramos que el contenedor de navegación sea visible para el Login
         binding.navHostFragment.visibility = View.VISIBLE
     }
 

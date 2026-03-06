@@ -46,10 +46,12 @@ class AgregarEditarHabitoFragment : Fragment() {
             usuarioLogueado = usuario
         }
 
+        // 1. Configurar el adaptador de categorías
         val categorias = arrayOf("Salud", "Estudio", "Trabajo", "Deporte", "General")
         val adapter = ArrayAdapter(requireContext(), R.layout.item_dropdown_categoria, categorias)
         binding.actvCategory.setAdapter(adapter)
 
+        // 2. Selector de Hora
         binding.etHabitTime.setOnClickListener {
             val cal = Calendar.getInstance()
             TimePickerDialog(requireContext(), { _, h, m ->
@@ -57,35 +59,50 @@ class AgregarEditarHabitoFragment : Fragment() {
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
         }
 
+        // 3. Botón Guardar
         binding.btnSaveHabit.setOnClickListener {
             val nombre = binding.etHabitName.text.toString().trim()
-            val categoria = binding.actvCategory.text.toString()
+            val categoriaSeleccionada = binding.actvCategory.text.toString()
             val hora = binding.etHabitTime.text.toString()
             val user = usuarioLogueado
 
             if (nombre.isNotEmpty() && user != null) {
                 val emailLimpio = user.email.trim().lowercase()
 
-                // 1. Creamos el objeto Habito
+                // 🔥 SOLUCIÓN AL "GENERAL": Convertimos el texto a ID real
+                val idCategoria = when (categoriaSeleccionada) {
+                    "General" -> 1
+                    "Salud" -> 2
+                    "Estudio" -> 3
+                    "Trabajo" -> 4
+                    "Deporte" -> 5
+                    else -> 6 // "General" o cualquier otro
+                }
+
+                // Creamos el objeto Habito con los datos reales
                 val nuevoHabito = Habito(
                     nombre = nombre,
-                    categoria = if (categoria.isNotEmpty()) categoria else "General",
+                    categoriaId = idCategoria, // ✅ Ahora es dinámico
                     hora = hora,
-                    usuarioEmail = emailLimpio
+                    usuarioEmail = emailLimpio,
+                    completado = false,
+                    sincronizado = false
                 )
 
-                // 2. Guardamos en la DB
+                // Guardamos usando la nueva lógica del ViewModel/Repository
                 viewModel.insertar(nuevoHabito)
 
-                // 3. NOTIFICACIÓN (Corregido para enviar el objeto 'nuevoHabito')
+                // Programar alarma
                 if (hora.isNotEmpty()) {
-                    // Ahora pasamos el objeto completo como espera la función de tu amigo
                     alarmHelper.programarAlarma(nuevoHabito)
                 }
 
                 Toast.makeText(requireContext(), "Hábito guardado", Toast.LENGTH_SHORT).show()
+
+                // Limpieza de UI y navegación
                 requireActivity().findViewById<View>(R.id.nav_host_fragment).visibility = View.INVISIBLE
                 findNavController().popBackStack()
+
             } else {
                 val mensaje = if (user == null) "Cargando sesión..." else "Escribe un nombre"
                 Toast.makeText(requireContext(), mensaje, Toast.LENGTH_SHORT).show()

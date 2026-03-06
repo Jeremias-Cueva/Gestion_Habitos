@@ -6,43 +6,39 @@ import com.example.gestionhabitos.database.AppDatabase
 import com.example.gestionhabitos.model.entitis.Habito
 import com.example.gestionhabitos.model.repository.HabitoRepository
 import kotlinx.coroutines.launch
+import androidx.lifecycle.asLiveData
 
 class HabitoViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = AppDatabase.getDatabase(application)
-    private val repository: HabitoRepository = HabitoRepository(
+    private val repository = HabitoRepository(
         database.habitoDao(),
         database.categoriaDao(),
         database.registroHabitoDao()
     )
 
-    private val userEmail = MutableLiveData<String>()
+    private val _userEmail = MutableLiveData<String>()
+    private var sincronizacionInicialRealizada = false
 
-    // Observa Room (Local) y se actualiza en tiempo real en la UI
-    val listaHabitos: LiveData<List<Habito>> = userEmail.switchMap { email ->
+    val listaHabitos: LiveData<List<Habito>> = _userEmail.switchMap { email ->
         repository.obtenerHabitosDeUsuario(email).asLiveData()
     }
 
-    val porcentajeProgreso: LiveData<Int> = listaHabitos.map { habitos ->
-        if (habitos.isNullOrEmpty()) 0
-        else {
-            val completados = habitos.count { it.completado }
-            (completados * 100) / habitos.size
-        }
-    }
-
-    // CARGA INTELIGENTE: Dispara la observación local y la sincronización con la nube
     fun cargarHabitosDeUsuario(email: String?) {
         if (email.isNullOrEmpty()) return
 
-        userEmail.value = email
+        if (_userEmail.value != email) {
+            _userEmail.value = email
+            sincronizacionInicialRealizada = false
+        }
 
-        // Lanzamos la sincronización en segundo plano
-        viewModelScope.launch {
-            // 1. Bajamos lo que hay en Supabase
-            repository.descargarHabitosDeNube(email)
-            // 2. Subimos lo que se quedó offline en el celular
-            repository.sincronizarHabitosPendientes(email)
+        if (!sincronizacionInicialRealizada) {
+            sincronizacionInicialRealizada = true
+            viewModelScope.launch {
+                // Sincronización al iniciar la pantalla
+                repository.sincronizarPendientes(email)
+                repository.descargarHabitosDeNube(email)
+            }
         }
     }
 
@@ -50,14 +46,10 @@ class HabitoViewModel(application: Application) : AndroidViewModel(application) 
         repository.insertarHabito(habito)
     }
 
-    fun actualizarHabito(habito: Habito) = viewModelScope.launch {
-        repository.actualizarHabito(habito)
-    }
-
     fun actualizarEstadoHabito(habito: Habito, isChecked: Boolean) {
         viewModelScope.launch {
-            val habitoActualizado = habito.copy(completado = isChecked)
-            repository.actualizarHabito(habitoActualizado)
+            repository.actualizarHabito(habito.copy(completado = isChecked))
+            // Registrar actividad para el historial/estadísticas
             repository.registrarActividad(habito.id, isChecked)
         }
     }

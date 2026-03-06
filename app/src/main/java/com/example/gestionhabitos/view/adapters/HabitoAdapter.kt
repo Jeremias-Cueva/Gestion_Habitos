@@ -4,48 +4,68 @@ import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestionhabitos.R
 import com.example.gestionhabitos.databinding.ItemHabitoBinding
 import com.example.gestionhabitos.model.entitis.Habito
 
 class HabitoAdapter(
-    var listaHabitos: List<Habito>,
     private val onHabitChecked: (Habito, Boolean) -> Unit,
-    private val onHabitClick: (Habito) -> Unit // Nueva función para manejar el click y editar
-) : RecyclerView.Adapter<HabitoAdapter.HabitoViewHolder>() {
+    private val onHabitClick: (Habito) -> Unit
+) : ListAdapter<Habito, HabitoAdapter.HabitoViewHolder>(HabitoDiffCallback()) {
 
-    class HabitoViewHolder(val binding: ItemHabitoBinding) : RecyclerView.ViewHolder(binding.root)
+    class HabitoViewHolder(val binding: ItemHabitoBinding) :
+        RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HabitoViewHolder {
-        val binding = ItemHabitoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemHabitoBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
         return HabitoViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: HabitoViewHolder, position: Int) {
-        val habito = listaHabitos[position]
+
+        val habito = getItem(position)
         val context = holder.itemView.context
 
         holder.binding.tvHabitName.text = habito.nombre
-        holder.binding.tvHabitCategory.text = habito.categoria
-        
-        // Mostramos la hora si existe
-        if (habito.hora.isNotEmpty()) {
-            holder.binding.tvHabitTime.text = habito.hora
-            holder.binding.tvHabitTime.visibility = android.view.View.VISIBLE
-        } else {
-            holder.binding.tvHabitTime.visibility = android.view.View.GONE
+
+        // 🔥 CATEGORÍAS CORRECTAS
+        val categoriaNombre = when (habito.categoriaId) {
+            1 -> "General"
+            2 -> "Salud"
+            3 -> "Estudio"
+            4 -> "Trabajo"
+            5 -> "Deporte"
+            else -> "Sin categoría"
         }
 
-        val colorInicial = if (habito.completado)
-            ContextCompat.getColor(context, R.color.habit_completed_bg)
-        else
-            ContextCompat.getColor(context, R.color.surface_white)
+        holder.binding.tvHabitCategory.text = "Categoría: $categoriaNombre"
 
-        holder.binding.root.setCardBackgroundColor(colorInicial)
+        // Mostrar hora solo si existe
+        if (habito.hora.isNotEmpty()) {
+            holder.binding.tvHabitTime.text = habito.hora
+            holder.binding.tvHabitTime.visibility = View.VISIBLE
+        } else {
+            holder.binding.tvHabitTime.visibility = View.GONE
+        }
 
-        // Manejar el click en el card para editar
+        // Color según estado
+        val colorActual =
+            if (habito.completado)
+                ContextCompat.getColor(context, R.color.habit_completed_bg)
+            else
+                ContextCompat.getColor(context, R.color.surface_white)
+
+        holder.binding.root.setCardBackgroundColor(colorActual)
+
         holder.binding.root.setOnClickListener {
             onHabitClick(habito)
         }
@@ -54,15 +74,18 @@ class HabitoAdapter(
         holder.binding.cbHabitDone.isChecked = habito.completado
 
         holder.binding.cbHabitDone.setOnCheckedChangeListener { _, isChecked ->
-            val colorDesde = if (isChecked)
-                ContextCompat.getColor(context, R.color.surface_white)
-            else
-                ContextCompat.getColor(context, R.color.habit_completed_bg)
 
-            val colorHasta = if (isChecked)
-                ContextCompat.getColor(context, R.color.habit_completed_bg)
-            else
-                ContextCompat.getColor(context, R.color.surface_white)
+            val colorDesde =
+                if (isChecked)
+                    ContextCompat.getColor(context, R.color.surface_white)
+                else
+                    ContextCompat.getColor(context, R.color.habit_completed_bg)
+
+            val colorHasta =
+                if (isChecked)
+                    ContextCompat.getColor(context, R.color.habit_completed_bg)
+                else
+                    ContextCompat.getColor(context, R.color.surface_white)
 
             ValueAnimator.ofObject(ArgbEvaluator(), colorDesde, colorHasta).apply {
                 duration = 300
@@ -76,10 +99,14 @@ class HabitoAdapter(
         }
     }
 
-    override fun getItemCount(): Int = listaHabitos.size
+    class HabitoDiffCallback : DiffUtil.ItemCallback<Habito>() {
 
-    fun updateList(nuevaLista: List<Habito>) {
-        this.listaHabitos = nuevaLista
-        notifyDataSetChanged()
+        override fun areItemsTheSame(oldItem: Habito, newItem: Habito): Boolean {
+            return oldItem.id == newItem.id
+        }
+
+        override fun areContentsTheSame(oldItem: Habito, newItem: Habito): Boolean {
+            return oldItem == newItem
+        }
     }
 }

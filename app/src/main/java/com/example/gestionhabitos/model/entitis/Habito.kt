@@ -2,7 +2,6 @@ package com.example.gestionhabitos.model.entitis
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.Ignore
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
@@ -17,9 +16,9 @@ data class Habito(
     @Expose
     var nombre: String = "",
 
-    @SerializedName("categoria")
+    @SerializedName("categoria_id")
     @Expose
-    var categoria: String = "",
+    var categoriaId: Int? = null,
 
     @SerializedName("hora")
     @Expose
@@ -29,11 +28,10 @@ data class Habito(
     @Expose
     var completado: Boolean = false,
 
-    @SerializedName("usuarioEmail")
+    @SerializedName("usuario_email")
     @Expose
     var usuarioEmail: String = "",
 
-    @Ignore
     @Expose(serialize = false, deserialize = false)
     var sincronizado: Boolean = false
-)
+) // <--- TERMINA EN PARÉNTESIS. Sin llaves abajo.

@@ -53,6 +53,14 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_listaHabitosFragment_to_objetivoFragment"
+            app:destination="@id/objetivoFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment
@@ -78,5 +86,25 @@
         android:name="com.example.gestionhabitos.view.fragments.AgregarEditarHabitoFragment"
         android:label="Nuevo Hábito"
         tools:layout="@layout/fragment_agregar_editar_habito" />
+
+    <fragment
+        android:id="@+id/objetivoFragment"
+        android:name="com.example.gestionhabitos.view.fragments.ObjetivoFragment"
+        android:label="Mis Objetivos"
+        tools:layout="@layout/fragment_objetivo">
+        <action
+            android:id="@+id/action_objetivoFragment_to_agregarObjetivoFragment"
+            app:destination="@id/agregarObjetivoFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/agregarObjetivoFragment"
+        android:name="com.example.gestionhabitos.view.fragments.AgregarObjetivoFragment"
+        android:label="Nuevo Objetivo"
+        tools:layout="@layout/fragment_agregar_objetivo" />
 
 </navigation>

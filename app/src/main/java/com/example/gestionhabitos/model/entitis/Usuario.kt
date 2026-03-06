@@ -10,13 +10,13 @@ data class Usuario(
     @PrimaryKey
     @SerializedName("email")
     @Expose
-    var email: String = "", // 🚩 Cambiado a var y con valor inicial
+    var email: String = "",
 
     @SerializedName("password")
     @Expose
-    var password: String = "", // 🚩 Cambiado a var y con valor inicial
+    var password: String = "",
 
     @SerializedName("nombre")
     @Expose
-    var nombre: String = "" // 🚩 Cambiado a var
+    var nombre: String = ""
 )

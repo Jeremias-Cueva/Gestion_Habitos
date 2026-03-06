@@ -12,11 +12,12 @@ interface RegistroHabitoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertar(registro: RegistroHabito)
 
-    // Consulta para obtener la cantidad de hábitos completados por fecha (últimos 7 días)
+    // 🚩 IMPORTANTE: El alias 'cantidad' debe coincidir con la data class
     @Query("SELECT fecha, COUNT(*) as cantidad FROM registro_habitos WHERE completado = 1 GROUP BY fecha ORDER BY fecha ASC LIMIT 7")
     fun obtenerProgresoSemanal(): Flow<List<ProgresoDiario>>
 }
 
+// 🚩 Mantenla en el mismo archivo, pero FUERA de la interfaz
 data class ProgresoDiario(
     val fecha: String,
     val cantidad: Int

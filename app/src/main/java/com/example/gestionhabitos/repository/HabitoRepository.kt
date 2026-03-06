@@ -5,91 +5,95 @@ import com.example.gestionhabitos.model.dao.*
 import com.example.gestionhabitos.model.entitis.*
 import com.example.gestionhabitos.network.SupabaseClient
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
+import java.text.SimpleDateFormat
+import java.util.*
 
 class HabitoRepository(
     private val habitoDao: HabitoDao,
     private val categoriaDao: CategoriaDao,
     private val registroDao: RegistroHabitoDao
 ) {
+
     fun obtenerHabitosDeUsuario(email: String): Flow<List<Habito>> =
         habitoDao.obtenerHabitosPorUsuario(email)
 
-    // 📥 DESCARGAR: Trae lo de la nube al celular (Evita duplicados por nombre)
     suspend fun descargarHabitosDeNube(email: String) {
         try {
             val response = SupabaseClient.apiService.obtenerHabitos("eq.$email")
-            if (response.isSuccessful && response.body() != null) {
-                val habitosNube = response.body()!!
-                val habitosActuales = habitoDao.obtenerHabitosPorUsuario(email).first()
-                val nombresLocales = habitosActuales.map { it.nombre }
-
-                habitosNube.forEach { habitoNube ->
-                    if (!nombresLocales.contains(habitoNube.nombre)) {
-                        habitoDao.insertar(habitoNube)
-                    }
-                }
-                Log.d("TESIS_SYNC", "✅ Descarga exitosa. Total en nube: ${habitosNube.size}")
-            }
-        } catch (e: Exception) {
-            Log.e("TESIS_SYNC", "❌ Error al descargar: ${e.message}")
-        }
-    }
-
-    // 📤 INSERTAR: Intenta subir al momento. Si falla, queda en Room para después.
-    suspend fun insertarHabito(habito: Habito) {
-        habitoDao.insertar(habito)
-        try {
-            val response = SupabaseClient.apiService.insertarHabito(habito)
             if (response.isSuccessful) {
-                Log.d("TESIS_SYNC", "✅ Sincronizado al instante")
-            }
-        } catch (e: Exception) {
-            Log.e("TESIS_SYNC", "☁️ Guardado en local (Offline)")
-        }
-    }
-
-    // 🔄 RECONCILIACIÓN: La pieza que te faltaba para el modo Offline
-    suspend fun sincronizarHabitosPendientes(email: String) {
-        try {
-            // 1. Ver qué hay en el celular
-            val habitosLocales = habitoDao.obtenerHabitosPorUsuario(email).first()
-
-            // 2. Ver qué hay en la nube
-            val responseNube = SupabaseClient.apiService.obtenerHabitos("eq.$email")
-
-            if (responseNube.isSuccessful && responseNube.body() != null) {
-                val habitosEnNube = responseNube.body()!!
-                val nombresEnNube = habitosEnNube.map { it.nombre }
-
-                // 3. Comparar: Si el nombre local no está en la nube, se sube
-                habitosLocales.forEach { local ->
-                    if (!nombresEnNube.contains(local.nombre)) {
-                        Log.d("TESIS_SYNC", "📤 Subiendo pendiente: ${local.nombre}")
-                        SupabaseClient.apiService.insertarHabito(local)
-                    }
+                val habitosNube = response.body() ?: emptyList()
+                habitosNube.forEach { habitoNube ->
+                    // Usamos insertarOActualizar para no duplicar ni machacar datos locales
+                    habitoDao.insertarOActualizar(habitoNube.copy(sincronizado = true))
                 }
             }
         } catch (e: Exception) {
-            Log.e("TESIS_SYNC", "❌ Falló reconciliación: ${e.message}")
+            Log.e("TESIS_SYNC", "Error descarga: ${e.message}")
         }
     }
 
-    suspend fun actualizarHabito(habito: Habito) = habitoDao.actualizar(habito)
-    suspend fun eliminarHabito(habito: Habito) = habitoDao.eliminar(habito)
-    val todasLasCategorias: Flow<List<Categoria>> = categoriaDao.obtenerCategorias()
+    suspend fun insertarHabito(habito: Habito) {
+        // 1. Guardar local siempre primero (Garantiza que el usuario lo vea)
+        val idLocal = habitoDao.insertar(habito.copy(id = 0, sincronizado = false))
+        val habitoTemporal = habito.copy(id = idLocal.toInt(), sincronizado = false)
+
+        try {
+            // 2. Intentar subir a Supabase
+            val response = SupabaseClient.apiService.insertarHabito(habito.copy(id = 0))
+            if (response.isSuccessful && !response.body().isNullOrEmpty()) {
+                val confirmado = response.body()!![0]
+
+                // 3. Reemplazo de ID local por ID de nube
+                habitoDao.eliminar(habitoTemporal)
+                habitoDao.insertar(confirmado.copy(sincronizado = true))
+
+                // 🔥 LA CLAVE: Ya que hay internet, intentamos subir el resto que esté pendiente
+                sincronizarPendientes(habito.usuarioEmail)
+            }
+        } catch (e: Exception) {
+            Log.e("TESIS_SYNC", "Offline: Se mantiene local con ID $idLocal")
+        }
+    }
+
+    suspend fun sincronizarPendientes(email: String) {
+        try {
+            val pendientes = habitoDao.obtenerHabitosPendientes(email)
+            if (pendientes.isEmpty()) return
+
+            pendientes.forEach { offline ->
+                // Enviamos con ID 0 para que Supabase genere su propio ID
+                val response = SupabaseClient.apiService.insertarHabito(offline.copy(id = 0))
+                if (response.isSuccessful && !response.body().isNullOrEmpty()) {
+                    val confirmado = response.body()!![0]
+                    // Borramos el registro offline y ponemos el de la nube
+                    habitoDao.eliminar(offline)
+                    habitoDao.insertar(confirmado.copy(sincronizado = true))
+                    Log.d("TESIS_SYNC", "Hábito pendiente sincronizado: ${confirmado.nombre}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("TESIS_SYNC", "Sync pendientes falló: sigue offline")
+        }
+    }
+
+    suspend fun actualizarHabito(habito: Habito) {
+        habitoDao.actualizar(habito)
+        try {
+            SupabaseClient.apiService.actualizarHabitoEnNube("eq.${habito.id}", habito)
+        } catch (e: Exception) { Log.e("TESIS_SYNC", "Update solo local") }
+    }
+
+    suspend fun eliminarHabito(habito: Habito) {
+        habitoDao.eliminar(habito)
+        try {
+            SupabaseClient.apiService.eliminarHabitoEnNube("eq.${habito.id}")
+        } catch (e: Exception) { Log.e("TESIS_SYNC", "Delete solo local") }
+    }
 
     suspend fun registrarActividad(habitoId: Int, estaCompletado: Boolean) {
-        val nuevoRegistro = RegistroHabito(
-            habitoId = habitoId,
-            fecha = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()),
-            completado = estaCompletado
-        )
-        registroDao.insertar(nuevoRegistro)
-        try {
-            SupabaseClient.apiService.insertarRegistro(nuevoRegistro)
-        } catch (e: Exception) {
-            Log.e("TESIS_SYNC", "Fallo sync registro")
-        }
+        val fecha = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val reg = RegistroHabito(habitoId = habitoId, fecha = fecha, completado = estaCompletado)
+        registroDao.insertar(reg)
+        try { SupabaseClient.apiService.insertarRegistro(reg) } catch (e: Exception) {}
     }
 }

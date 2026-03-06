@@ -7,16 +7,29 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface HabitoDao {
 
-    // Usamos LOWER para asegurar que el filtro sea exacto sin importar mayúsculas
-    @Query("SELECT * FROM habitos WHERE LOWER(usuarioEmail) = LOWER(:email) ORDER BY id ASC")
+    @Query("SELECT * FROM habitos WHERE usuarioEmail = :email ORDER BY nombre ASC")
     fun obtenerHabitosPorUsuario(email: String): Flow<List<Habito>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertar(habito: Habito)
+    @Query("SELECT * FROM habitos WHERE usuarioEmail = :email AND sincronizado = 0")
+    suspend fun obtenerHabitosPendientes(email: String): List<Habito>
+
+    // Usamos IGNORE para que si el ID ya existe, no de error ni borre el actual
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertar(habito: Habito): Long
 
     @Update
     suspend fun actualizar(habito: Habito)
 
     @Delete
     suspend fun eliminar(habito: Habito)
+
+    // 🔥 ESTA ES LA FUNCIÓN QUE TE DABA ERROR
+    @Transaction
+    suspend fun insertarOActualizar(habito: Habito) {
+        val id = insertar(habito)
+        if (id == -1L) {
+            // Si el ID ya existe (retorna -1), entonces actualizamos el registro
+            actualizar(habito)
+        }
+    }
 }

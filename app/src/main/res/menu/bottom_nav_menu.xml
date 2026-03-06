@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+
     <item
         android:id="@+id/dashboardFragment"
         android:icon="@android:drawable/ic_menu_today"
         android:title="Inicio" />
+
     <item
         android:id="@+id/listaHabitosFragment"
         android:icon="@android:drawable/ic_menu_agenda"
         android:title="Hábitos" />
+
     <item
         android:id="@+id/estadisticasFragment"
         android:icon="@android:drawable/ic_menu_sort_by_size"
         android:title="Progreso" />
+
+    <item
+        android:id="@+id/objetivoFragment"
+        android:icon="@drawable/ic_target"
+        android:title="Objetivos" />
+
     <item
         android:id="@+id/perfilFragment"
         android:icon="@android:drawable/ic_menu_myplaces"
         android:title="Perfil" />
+
 </menu>
