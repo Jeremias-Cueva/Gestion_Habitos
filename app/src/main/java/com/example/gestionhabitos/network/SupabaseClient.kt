@@ -10,7 +10,7 @@ object SupabaseClient {
     private const val BASE_URL = "https://azogcumdxcahxdoassax.supabase.co/rest/v1/"
 
     // ⚠️ REEMPLAZA ESTO: Pega aquí la llave larguísima que dice "anon" y "public" en Supabase
-    private const val API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6b2djdW1keGNhaHhkb2Fzc2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NjM0MjAsImV4cCI6MjA4ODMzOTQyMH0.1QaF0jUcEmmSQG_g1Zl-Hmm28DQb0lxN2aXUf4M3Cik"
+    private const val API_KEY = "TU_LLAVE_AQUI"
 
     // Este es el "Guardia de Seguridad" que inyecta tu llave en cada petición
     private val httpClient = OkHttpClient.Builder().addInterceptor { chain ->
