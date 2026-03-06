@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.example.gestionhabitos.R
 import com.example.gestionhabitos.databinding.FragmentPerfilBinding
@@ -42,9 +43,18 @@ class PerfilFragment : Fragment() {
                 .setTitle("Cerrar Sesión")
                 .setMessage("¿Estás seguro de que deseas salir?")
                 .setPositiveButton("Salir") { _, _ ->
+                    // 1. Ejecutar el logout en el ViewModel (borra ID 1 en Room)
                     usuarioViewModel.logout()
-                    // Limpia la pila y vuelve al login
-                    findNavController().navigate(R.id.action_perfilFragment_to_loginFragment)
+
+                    // 2. Navegación SEGURA al Login
+                    // Limpiamos la pila de actividades para evitar que la app se cierre o vuelva atrás
+                    val navOptions = NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_graph, true) // Elimina todo el historial del grafo
+                        .build()
+
+                    findNavController().navigate(R.id.loginFragment, null, navOptions)
+
+                    Toast.makeText(requireContext(), "Sesión cerrada", Toast.LENGTH_SHORT).show()
                 }
                 .setNegativeButton("Cancelar", null)
                 .show()
@@ -67,7 +77,8 @@ class PerfilFragment : Fragment() {
                 val email = etCorreo.text.toString().trim()
                 if (nombre.isNotEmpty() && email.isNotEmpty()) {
                     val usuarioActual = usuarioViewModel.datosUsuario.value
-                    // Actualizamos Room manteniendo el ID 1 forzoso
+
+                    // Actualizamos Room manteniendo el ID 1 forzoso para la sesión activa
                     usuarioViewModel.actualizarUsuario(Usuario(
                         id = 1,
                         nombre = nombre,
