@@ -37,7 +37,7 @@
 
                 if (nombre.isNotEmpty() && email.isNotEmpty() && pass.isNotEmpty()) {
                     viewModel.registrar(nombre, email, pass)
-                    Toast.makeText(requireContext(), "Enviando a MockAPI...", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Enviando a SupaBase...", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(requireContext(), "Por favor, llena todos los campos", Toast.LENGTH_SHORT).show()
                 }
