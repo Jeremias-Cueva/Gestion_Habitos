@@ -75,23 +75,24 @@ class PerfilFragment : Fragment() {
             .setPositiveButton("Guardar") { _, _ ->
                 val nombre = etNombre.text.toString().trim()
                 val email = etCorreo.text.toString().trim()
+
                 if (nombre.isNotEmpty() && email.isNotEmpty()) {
                     val usuarioActual = usuarioViewModel.datosUsuario.value
 
-                    // Actualizamos Room manteniendo el ID 1 forzoso para la sesión activa
+                    // ✅ OBJETO CORREGIDO: Sin ID y con los nombres de parámetros correctos
                     usuarioViewModel.actualizarUsuario(Usuario(
-                        id = 1,
-                        nombre = nombre,
                         email = email,
-                        password = usuarioActual?.password ?: ""
+                        password = usuarioActual?.password ?: "",
+                        nombre = nombre
                     ))
-                    Toast.makeText(requireContext(), "Datos actualizados", Toast.LENGTH_SHORT).show()
+
+                    // 🚩 El error de 'Unresolved reference' se quita asegurando el import arriba
+                    android.widget.Toast.makeText(requireContext(), "Datos actualizados", android.widget.Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

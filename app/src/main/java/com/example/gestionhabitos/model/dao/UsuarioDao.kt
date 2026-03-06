@@ -6,8 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UsuarioDao {
-    @Query("SELECT * FROM usuarios WHERE id = 1 LIMIT 1")
-    fun obtenerSesionActiva(): Flow<Usuario?>
+    // 🚩 Esta es la función que le falta al ViewModel
+    @Query("SELECT * FROM usuarios LIMIT 1")
+    fun obtenerSesionActiva(): kotlinx.coroutines.flow.Flow<Usuario?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertar(usuario: Usuario)
@@ -15,6 +16,7 @@ interface UsuarioDao {
     @Update
     suspend fun actualizar(usuario: Usuario)
 
-    @Query("DELETE FROM usuarios WHERE id = :id")
-    suspend fun borrarPorId(id: Int)
+    // Para el logout, borramos todo lo que haya en la tabla local
+    @Query("DELETE FROM usuarios")
+    suspend fun borrarSesion()
 }

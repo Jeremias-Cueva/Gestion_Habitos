@@ -106,9 +106,9 @@ class RecuperarPasswordFragment : Fragment() {
                 // MockAPI usa IDs como Strings en la URL, pero tu modelo lo tiene como Int. 
                 // Habitualmente MockAPI maneja esto bien.
                 val response = withContext(Dispatchers.IO) {
-                    RetrofitClient.habitFlow.actualizarUsuario(user.id.toString(), usuarioActualizado)
+                    // Usamos el email en lugar del id para identificar al usuario
+                    RetrofitClient.habitFlow.actualizarUsuario(user.email, usuarioActualizado)
                 }
-
                 if (response.isSuccessful) {
                     Toast.makeText(requireContext(), "Contraseña actualizada con éxito", Toast.LENGTH_LONG).show()
                     findNavController().popBackStack() // Volver al Login

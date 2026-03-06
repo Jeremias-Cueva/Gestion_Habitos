@@ -1,23 +1,22 @@
 package com.example.gestionhabitos.model.entitis
 
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.google.gson.annotations.SerializedName
 
 @Entity(tableName = "usuarios")
 data class Usuario(
     @PrimaryKey
-    val id: Int = 1, // Siempre 1 para representar la sesión activa local
-
-    @SerializedName("nombre")
-    val nombre: String,
-
     @SerializedName("email")
-    val email: String,
+    @Expose
+    var email: String = "", // 🚩 Cambiado a var y con valor inicial
 
     @SerializedName("password")
-    val password: String,
+    @Expose
+    var password: String = "", // 🚩 Cambiado a var y con valor inicial
 
-    @SerializedName("fotoUri")
-    val fotoUri: String = ""
+    @SerializedName("nombre")
+    @Expose
+    var nombre: String = "" // 🚩 Cambiado a var
 )

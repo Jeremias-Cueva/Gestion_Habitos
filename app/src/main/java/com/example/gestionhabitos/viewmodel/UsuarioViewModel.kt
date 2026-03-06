@@ -13,7 +13,6 @@ import kotlinx.coroutines.withContext
 class UsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getDatabase(application)
-    // ¡Adiós RegistroRepository y RetrofitClient! Usamos nuestra única fuente de la verdad
     private val usuarioRepo = UsuarioRepository()
 
     val datosUsuario: LiveData<Usuario?> = db.usuarioDao().obtenerSesionActiva().asLiveData()
@@ -27,6 +26,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     private val _errorRegistro = MutableLiveData<String?>()
     val errorRegistro: LiveData<String?> get() = _errorRegistro
 
+    // --- LOGIN ---
     fun login(email: String, pass: String) = viewModelScope.launch {
         try {
             val response = withContext(Dispatchers.IO) {
@@ -34,64 +34,64 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
             }
 
             if (response.isSuccessful) {
-                val user = response.body()?.find {
-                    it.password == pass.trim()
-                }
-
+                val user = response.body()?.find { it.password == pass.trim() }
                 if (user != null) {
                     withContext(Dispatchers.IO) {
-                        db.usuarioDao().borrarPorId(1)
-                        // Guardamos en Room con ID 1 para mantener tu lógica de sesión local
-                        db.usuarioDao().insertar(user.copy(id = 1))
+                        db.usuarioDao().borrarSesion()
+                        db.usuarioDao().insertar(user)
                     }
                     _loginResult.value = true
-                } else {
-                    _loginResult.value = false
-                }
-            } else {
-                _loginResult.value = false
-            }
+                } else { _loginResult.value = false }
+            } else { _loginResult.value = false }
         } catch (e: Exception) {
-            Log.e("TESIS_LOGIN", e.message ?: "Error desconocido")
             _loginResult.value = false
         }
     }
 
+    // --- REGISTRO (CORREGIDO PARA GUARDAR EN LOCAL TAMBIÉN) ---
     fun registrar(nombre: String, email: String, pass: String) = viewModelScope.launch {
         try {
             _errorRegistro.value = null
 
-            // 1. VERIFICAR SI EL CORREO YA EXISTE EN SUPABASE
+            // 1. Verificar si existe en la nube
             val checkResponse = withContext(Dispatchers.IO) {
                 usuarioRepo.buscarUsuarioPorEmail(email.trim())
             }
 
             if (checkResponse.isSuccessful && !checkResponse.body().isNullOrEmpty()) {
-                _errorRegistro.value = "Este correo ya está registrado. Intenta con otro."
+                _errorRegistro.value = "Este correo ya está registrado."
                 _registroExitoso.value = false
                 return@launch
             }
 
-            // 2. GENERAR ID ÚNICO PARA LA NUBE (Para que no choquen en Supabase)
-            val idUnicoParaNube = (1000..999999).random()
+            // 2. Crear objeto (ID 0 para que Supabase asigne el real)
             val nuevoUsuario = Usuario(
-                id = idUnicoParaNube,
                 nombre = nombre,
                 email = email.trim(),
-                password = pass.trim(),
-                fotoUri = ""
+                password = pass.trim()
             )
 
-            // 3. ENVIAR A SUPABASE
+            // 3. Enviar a Supabase
             val response = withContext(Dispatchers.IO) {
                 usuarioRepo.registrarEnNube(nuevoUsuario)
             }
 
-            _registroExitoso.value = response.isSuccessful
+            if (response.isSuccessful) {
+                // 🚩 ¡AQUÍ ESTÁ EL CAMBIO!
+                // Si la nube lo aceptó, lo guardamos en el teléfono para iniciar sesión
+                withContext(Dispatchers.IO) {
+                    db.usuarioDao().borrarSesion()
+                    db.usuarioDao().insertar(nuevoUsuario)
+                }
+                _registroExitoso.value = true
+            } else {
+                _errorRegistro.value = "Error al guardar en la nube."
+                _registroExitoso.value = false
+            }
 
         } catch (e: Exception) {
-            Log.e("TESIS_REGISTRO", "Fallo red: ${e.message}")
-            _errorRegistro.value = "Error de conexión al intentar registrar."
+            Log.e("TESIS_REGISTRO", "Fallo: ${e.message}")
+            _errorRegistro.value = "Error de conexión."
             _registroExitoso.value = false
         }
     }
@@ -101,7 +101,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun logout() = viewModelScope.launch(Dispatchers.IO) {
-        db.usuarioDao().borrarPorId(1)
+        db.usuarioDao().borrarSesion()
     }
 
     fun resetLoginResult() { _loginResult.value = null }

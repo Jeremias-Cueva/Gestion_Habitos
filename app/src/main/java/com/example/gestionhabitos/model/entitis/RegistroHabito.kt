@@ -3,6 +3,8 @@ package com.example.gestionhabitos.model.entitis
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 @Entity(
     tableName = "registro_habitos",
@@ -16,9 +18,12 @@ import androidx.room.ForeignKey
     ]
 )
 data class RegistroHabito(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val habitoId: Int,
-    val fecha: String,
-    val completado: Boolean
-)
-// ¡ASEGÚRATE DE QUE NO HAYA NADA MÁS AQUÍ ABAJO!
+    @PrimaryKey(autoGenerate = true)
+    @SerializedName("id")
+    @Expose(serialize = false, deserialize = true)
+    var id: Int = 0,
+
+    @SerializedName("habitoid") @Expose var habitoId: Int = 0, // Ojo: minúsculas si así está en SQL
+    @SerializedName("fecha") @Expose var fecha: String = "",
+    @SerializedName("completado") @Expose var completado: Boolean = false
+)// ¡ASEGÚRATE DE QUE NO HAYA NADA MÁS AQUÍ ABAJO!

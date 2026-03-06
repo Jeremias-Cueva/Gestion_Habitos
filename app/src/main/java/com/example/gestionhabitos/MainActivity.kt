@@ -45,8 +45,6 @@ class MainActivity : AppCompatActivity() {
 
         pedirPermisoNotificaciones()
 
-        // OBSERVADOR DINÁMICO DE SESIÓN
-        // Si detecta un usuario en Room, activa el ViewPager y el BottomNav
         usuarioViewModel.datosUsuario.observe(this) { usuario ->
             if (usuario != null) {
                 mostrarPantallaPrincipal()
@@ -58,8 +56,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun mostrarPantallaPrincipal() {
         binding.viewPager.visibility = View.VISIBLE
-        binding.navHostFragment.visibility = View.GONE
         binding.bottomNavigation.visibility = View.VISIBLE
+
+        // 🛡️ CORRECCIÓN: Usamos el nombre exacto del XML a través de binding
+        // Cambiamos GONE por INVISIBLE para que el NavController no se destruya
+        binding.navHostFragment.visibility = View.INVISIBLE
 
         if (binding.viewPager.adapter == null) {
             val adapter = MainViewPagerAdapter(this)
@@ -86,8 +87,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun mostrarPantallaLogin() {
         binding.viewPager.visibility = View.GONE
-        binding.navHostFragment.visibility = View.VISIBLE
         binding.bottomNavigation.visibility = View.GONE
+        // Aseguramos que el contenedor de navegación sea visible para el Login
+        binding.navHostFragment.visibility = View.VISIBLE
     }
 
     private fun pedirPermisoNotificaciones() {

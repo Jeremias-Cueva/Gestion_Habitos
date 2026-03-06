@@ -14,10 +14,10 @@ interface HabitFlowApiService {
     @POST("usuarios")
     suspend fun registrarUsuario(@Body usuario: Usuario): Response<Usuario>
 
-    // Nuevo método para actualizar la contraseña (o cualquier dato) del usuario en MockAPI
-    @PUT("usuarios/{id}")
+    // ✅ ACTUALIZADO: Cambiamos {id} por {email} para que coincida con tu lógica
+    @PUT("usuarios/{email}")
     suspend fun actualizarUsuario(
-        @Path("id") id: String,
+        @Path("email") email: String, // 🚩 Ahora recibe el correo como identificador
         @Body usuario: Usuario
     ): Response<Usuario>
 }

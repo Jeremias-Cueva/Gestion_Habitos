@@ -30,7 +30,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "habitflow_db"
+                    "habitflow_db_v4"
                 )
                     // Esto permite que la base de datos se reconstruya si cambias algo en las entities
                     .fallbackToDestructiveMigration()

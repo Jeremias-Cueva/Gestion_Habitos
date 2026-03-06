@@ -84,6 +84,7 @@ class AgregarEditarHabitoFragment : Fragment() {
                 }
 
                 Toast.makeText(requireContext(), "Hábito guardado", Toast.LENGTH_SHORT).show()
+                requireActivity().findViewById<View>(R.id.nav_host_fragment).visibility = View.INVISIBLE
                 findNavController().popBackStack()
             } else {
                 val mensaje = if (user == null) "Cargando sesión..." else "Escribe un nombre"

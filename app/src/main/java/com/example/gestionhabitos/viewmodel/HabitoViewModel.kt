@@ -10,24 +10,19 @@ import kotlinx.coroutines.launch
 class HabitoViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = AppDatabase.getDatabase(application)
-
-    // 1. Inicializamos el repositorio inmediatamente para que esté disponible para los LiveData
     private val repository: HabitoRepository = HabitoRepository(
         database.habitoDao(),
         database.categoriaDao(),
         database.registroHabitoDao()
     )
 
-    // 2. LiveData que contendrá el email del usuario actual
     private val userEmail = MutableLiveData<String>()
 
-    // 3. Transformamos el email en la lista de hábitos correspondiente
-    // switchMap ahora encuentra al 'repository' ya inicializado
+    // Observa Room (Local) y se actualiza en tiempo real en la UI
     val listaHabitos: LiveData<List<Habito>> = userEmail.switchMap { email ->
         repository.obtenerHabitosDeUsuario(email).asLiveData()
     }
 
-    // 4. Cálculo del progreso basado en la lista filtrada
     val porcentajeProgreso: LiveData<Int> = listaHabitos.map { habitos ->
         if (habitos.isNullOrEmpty()) 0
         else {
@@ -36,9 +31,19 @@ class HabitoViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    // Método que se llama desde el Fragment al detectar la sesión activa
-    fun cargarHabitosDeUsuario(email: String) {
+    // CARGA INTELIGENTE: Dispara la observación local y la sincronización con la nube
+    fun cargarHabitosDeUsuario(email: String?) {
+        if (email.isNullOrEmpty()) return
+
         userEmail.value = email
+
+        // Lanzamos la sincronización en segundo plano
+        viewModelScope.launch {
+            // 1. Bajamos lo que hay en Supabase
+            repository.descargarHabitosDeNube(email)
+            // 2. Subimos lo que se quedó offline en el celular
+            repository.sincronizarHabitosPendientes(email)
+        }
     }
 
     fun insertar(habito: Habito) = viewModelScope.launch {
