@@ -1,16 +1,14 @@
 package com.example.gestionhabitos.view.fragments
 
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.example.gestionhabitos.MainActivity // 👈 Asegúrate de que este import exista
+import com.example.gestionhabitos.MainActivity
 import com.example.gestionhabitos.R
 import com.example.gestionhabitos.databinding.FragmentAgregarObjetivoBinding
-import com.example.gestionhabitos.model.entitis.Objetivo
 import com.example.gestionhabitos.viewmodel.ObjetivoViewModel
 
 class AgregarObjetivoFragment : Fragment(R.layout.fragment_agregar_objetivo) {
@@ -23,43 +21,27 @@ class AgregarObjetivoFragment : Fragment(R.layout.fragment_agregar_objetivo) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentAgregarObjetivoBinding.bind(view)
 
-        val sharedPreferences = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-        val userEmail = sharedPreferences.getString("user_email", null)
-
         binding.btnGuardarObjetivo.setOnClickListener {
             val titulo = binding.etTituloObjetivo.text.toString().trim()
-            val descripcion = binding.etDescripcionObjetivo?.text?.toString()?.trim() ?: ""
+            val descripcion = binding.etDescripcionObjetivo.text.toString().trim()
             val meta = binding.etMetaValor.text.toString().toDoubleOrNull() ?: 0.0
 
-            if (userEmail == null) {
-                Toast.makeText(requireContext(), "Error: Sesión no encontrada", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
             if (titulo.isNotEmpty() && meta > 0) {
-                val nuevo = Objetivo(
-                    id = 0,
-                    titulo = titulo,
-                    descripcion = descripcion,
-                    metaValor = meta,
-                    valorActual = 0.0,
-                    completado = false,
-                    usuarioEmail = userEmail,
-                    sincronizado = false
-                )
+                // 🛡️ CORRECCIÓN: Llamamos a la función que SÍ existe en el ViewModel
+                viewModel.agregarObjetivo(titulo, descripcion, meta)
+                
+                Toast.makeText(requireContext(), "Objetivo guardado correctamente", Toast.LENGTH_SHORT).show()
 
-                viewModel.insertarObjetivo(nuevo)
-                Toast.makeText(requireContext(), "Objetivo creado con éxito", Toast.LENGTH_SHORT).show()
-
-                // 🛡️ CORRECCIÓN: Devolvemos la visibilidad al ViewPager antes de salir
-                (activity as? MainActivity)?.setNavegacionPrincipal(true)
+                // Restaurar visibilidad si es necesario (según tu lógica de MainActivity)
+                // (activity as? MainActivity)?.mostrarPantallaPrincipal() 
 
                 findNavController().popBackStack()
             } else {
-                Toast.makeText(requireContext(), "Por favor, completa todos los campos correctamente", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Por favor, ingresa un título y una meta válida", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

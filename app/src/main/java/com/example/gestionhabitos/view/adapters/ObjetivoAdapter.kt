@@ -2,16 +2,17 @@ package com.example.gestionhabitos.view.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestionhabitos.databinding.ItemObjetivoBinding
 import com.example.gestionhabitos.model.entitis.Objetivo
+import java.util.*
 
 class ObjetivoAdapter(
-    private val onEditClick: (Objetivo) -> Unit,   // 🛡️ SOLUCIÓN: Parámetro Edit
-    private val onDeleteClick: (Objetivo) -> Unit  // 🛡️ SOLUCIÓN: Parámetro Delete
-) : ListAdapter<Objetivo, ObjetivoAdapter.ObjetivoViewHolder>(ObjetivoDiffCallback()) {
+    private var listaObjetivos: List<Objetivo>,
+    private val onObjetivoClick: (Objetivo) -> Unit
+) : RecyclerView.Adapter<ObjetivoAdapter.ObjetivoViewHolder>() {
+
+    class ObjetivoViewHolder(val binding: ItemObjetivoBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ObjetivoViewHolder {
         val binding = ItemObjetivoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -19,22 +20,29 @@ class ObjetivoAdapter(
     }
 
     override fun onBindViewHolder(holder: ObjetivoViewHolder, position: Int) {
-        holder.bind(getItem(position))
-    }
-
-    inner class ObjetivoViewHolder(private val binding: ItemObjetivoBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(objetivo: Objetivo) {
-            binding.tvTituloObjetivo.text = objetivo.titulo
-            binding.tvProgreso.text = "${objetivo.valorActual} / ${objetivo.metaValor}"
-
-            // Lógica de los botones
-            binding.btnEliminar.setOnClickListener { onDeleteClick(objetivo) }
-            binding.root.setOnClickListener { onEditClick(objetivo) }
+        val objetivo = listaObjetivos[position]
+        
+        holder.binding.apply {
+            tvTituloObjetivo.text = objetivo.titulo
+            tvDescripcionObjetivo.text = objetivo.descripcion
+            
+            // Calcular progreso
+            val progreso = if (objetivo.metaValor > 0) {
+                (objetivo.valorActual * 100 / objetivo.metaValor).toInt()
+            } else 0
+            
+            progressObjetivo.progress = progreso
+            tvPorcentajeObjetivo.text = "$progreso%"
+            tvProgresoTexto.text = String.format(Locale.getDefault(), "%.1f de %.1f", objetivo.valorActual, objetivo.metaValor)
+            
+            root.setOnClickListener { onObjetivoClick(objetivo) }
         }
     }
 
-    class ObjetivoDiffCallback : DiffUtil.ItemCallback<Objetivo>() {
-        override fun areItemsTheSame(oldItem: Objetivo, newItem: Objetivo) = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Objetivo, newItem: Objetivo) = oldItem == newItem
+    override fun getItemCount(): Int = listaObjetivos.size
+
+    fun updateList(nuevaLista: List<Objetivo>) {
+        listaObjetivos = nuevaLista
+        notifyDataSetChanged()
     }
 }

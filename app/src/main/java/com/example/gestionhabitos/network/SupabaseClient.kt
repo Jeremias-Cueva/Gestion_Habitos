@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object SupabaseClient {
 
     private const val BASE_URL = "https://azogcumdxcahxdoassax.supabase.co/rest/v1/"
-    private const val API_KEY = "TU_APY"
+    private const val API_KEY = "API-KEY"
 
     // 🚩 CONFIGURACIÓN DE GSON: Indispensable para que @Expose funcione
     private val gson = GsonBuilder()
