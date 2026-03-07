@@ -83,7 +83,7 @@ class AgregarEditarHabitoFragment : Fragment() {
                             }
                             binding.actvCategory.setText(nombreCat, false)
                             binding.etHabitTime.setText(h.hora)
-                            datosCargados = true // Evita que se sobreescriba si el usuario está escribiendo
+                            datosCargados = true 
                         }
                     }
                 }
@@ -144,6 +144,11 @@ class AgregarEditarHabitoFragment : Fragment() {
             } else {
                 Toast.makeText(requireContext(), "Por favor, completa los campos", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        // 6. Lógica del NUEVO BOTÓN CANCELAR
+        binding.btnCancelHabit.setOnClickListener {
+            findNavController().popBackStack() // Simplemente cerramos la pantalla sin guardar
         }
     }
 
