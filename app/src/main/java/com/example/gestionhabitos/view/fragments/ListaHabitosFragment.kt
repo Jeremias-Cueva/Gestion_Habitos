@@ -32,7 +32,16 @@ class ListaHabitosFragment : Fragment() {
                 habitoViewModel.actualizarEstadoHabito(habito, isChecked)
             },
             onHabitClick = { habito ->
-                // aquí podrías editar hábito si quieres
+                // 🔥 RESTAURADO: Navegar a la pantalla de edición al hacer clic
+                requireActivity()
+                    .findViewById<View>(R.id.nav_host_fragment)
+                    .visibility = View.VISIBLE
+
+                val bundle = Bundle().apply {
+                    putInt("habitoId", habito.id)
+                }
+                findNavController()
+                    .navigate(R.id.action_listaHabitosFragment_to_agregarEditarHabitoFragment, bundle)
             }
         )
     }
@@ -42,7 +51,6 @@ class ListaHabitosFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
         _binding = FragmentListaHabitosBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -58,23 +66,15 @@ class ListaHabitosFragment : Fragment() {
             0,
             ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
         ) {
-
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean {
-                return false
-            }
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-
                 val position = viewHolder.adapterPosition
                 val habito: Habito = adapter.currentList[position]
 
                 AlertDialog.Builder(requireContext())
                     .setTitle("Eliminar hábito")
-                    .setMessage("¿Estás seguro de querer borrar este hábito?")
+                    .setMessage("¿Estás seguro de querer borrar '${habito.nombre}'?")
                     .setPositiveButton("Sí") { _, _ ->
                         habitoViewModel.eliminar(habito)
                     }
@@ -90,7 +90,6 @@ class ListaHabitosFragment : Fragment() {
         itemTouchHelper.attachToRecyclerView(binding.rvHabitos)
 
         binding.fabAddHabit.setOnClickListener {
-
             requireActivity()
                 .findViewById<View>(R.id.nav_host_fragment)
                 .visibility = View.VISIBLE

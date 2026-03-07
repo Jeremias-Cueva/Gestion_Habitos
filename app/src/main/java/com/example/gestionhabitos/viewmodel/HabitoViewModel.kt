@@ -6,7 +6,6 @@ import com.example.gestionhabitos.database.AppDatabase
 import com.example.gestionhabitos.model.entitis.Habito
 import com.example.gestionhabitos.model.repository.HabitoRepository
 import kotlinx.coroutines.launch
-import androidx.lifecycle.asLiveData
 
 class HabitoViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -26,16 +25,13 @@ class HabitoViewModel(application: Application) : AndroidViewModel(application) 
 
     fun cargarHabitosDeUsuario(email: String?) {
         if (email.isNullOrEmpty()) return
-
         if (_userEmail.value != email) {
             _userEmail.value = email
             sincronizacionInicialRealizada = false
         }
-
         if (!sincronizacionInicialRealizada) {
             sincronizacionInicialRealizada = true
             viewModelScope.launch {
-                // Sincronización al iniciar la pantalla
                 repository.sincronizarPendientes(email)
                 repository.descargarHabitosDeNube(email)
             }
@@ -46,10 +42,14 @@ class HabitoViewModel(application: Application) : AndroidViewModel(application) 
         repository.insertarHabito(habito)
     }
 
+    // 🔥 NUEVA FUNCIÓN: Actualizar hábito completo (nombre, hora, etc)
+    fun actualizar(habito: Habito) = viewModelScope.launch {
+        repository.actualizarHabito(habito)
+    }
+
     fun actualizarEstadoHabito(habito: Habito, isChecked: Boolean) {
         viewModelScope.launch {
             repository.actualizarHabito(habito.copy(completado = isChecked))
-            // Registrar actividad para el historial/estadísticas
             repository.registrarActividad(habito.id, isChecked)
         }
     }

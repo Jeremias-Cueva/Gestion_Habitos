@@ -27,8 +27,12 @@ class AgregarEditarHabitoFragment : Fragment() {
 
     private val viewModel: HabitoViewModel by viewModels()
     private val usuarioViewModel: UsuarioViewModel by viewModels()
+    
     private var usuarioLogueado: Usuario? = null
     private lateinit var alarmHelper: AlarmHelper
+    
+    private var habitoId: Int = 0
+    private var datosCargados = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,16 +46,51 @@ class AgregarEditarHabitoFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 1. Cargar sesión y disparar carga de hábitos
         usuarioViewModel.datosUsuario.observe(viewLifecycleOwner) { usuario ->
             usuarioLogueado = usuario
+            usuario?.let {
+                viewModel.cargarHabitosDeUsuario(it.email)
+            }
         }
 
-        // 1. Configurar el adaptador de categorías
+        // 2. Adaptador de categorías
         val categorias = arrayOf("Salud", "Estudio", "Trabajo", "Deporte", "General")
         val adapter = ArrayAdapter(requireContext(), R.layout.item_dropdown_categoria, categorias)
         binding.actvCategory.setAdapter(adapter)
 
-        // 2. Selector de Hora
+        // 3. RECUPERAR DATOS SI ES EDICIÓN
+        arguments?.let { bundle ->
+            habitoId = bundle.getInt("habitoId", 0)
+            if (habitoId != 0) {
+                binding.tvTitle.text = "Editar Hábito"
+                binding.btnSaveHabit.text = "Actualizar Hábito"
+                
+                // Observar cambios en la lista para rellenar los campos al editar
+                viewModel.listaHabitos.observe(viewLifecycleOwner) { habitos ->
+                    if (!datosCargados && habitos.isNotEmpty()) {
+                        val habito = habitos.find { h -> h.id == habitoId }
+                        habito?.let { h ->
+                            binding.etHabitName.setText(h.nombre)
+                            
+                            val nombreCat = when(h.categoriaId) {
+                                1 -> "General"
+                                2 -> "Salud"
+                                3 -> "Estudio"
+                                4 -> "Trabajo"
+                                5 -> "Deporte"
+                                else -> "General"
+                            }
+                            binding.actvCategory.setText(nombreCat, false)
+                            binding.etHabitTime.setText(h.hora)
+                            datosCargados = true // Evita que se sobreescriba si el usuario está escribiendo
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. Selector de Hora
         binding.etHabitTime.setOnClickListener {
             val cal = Calendar.getInstance()
             TimePickerDialog(requireContext(), { _, h, m ->
@@ -59,7 +98,7 @@ class AgregarEditarHabitoFragment : Fragment() {
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
         }
 
-        // 3. Botón Guardar
+        // 5. Botón Guardar / Actualizar
         binding.btnSaveHabit.setOnClickListener {
             val nombre = binding.etHabitName.text.toString().trim()
             val categoriaSeleccionada = binding.actvCategory.text.toString()
@@ -69,43 +108,41 @@ class AgregarEditarHabitoFragment : Fragment() {
             if (nombre.isNotEmpty() && user != null) {
                 val emailLimpio = user.email.trim().lowercase()
 
-                // 🔥 SOLUCIÓN AL "GENERAL": Convertimos el texto a ID real
                 val idCategoria = when (categoriaSeleccionada) {
                     "General" -> 1
                     "Salud" -> 2
                     "Estudio" -> 3
                     "Trabajo" -> 4
                     "Deporte" -> 5
-                    else -> 6 // "General" o cualquier otro
+                    else -> 1
                 }
 
-                // Creamos el objeto Habito con los datos reales
-                val nuevoHabito = Habito(
+                val habitoAGuardar = Habito(
+                    id = habitoId,
                     nombre = nombre,
-                    categoriaId = idCategoria, // ✅ Ahora es dinámico
+                    categoriaId = idCategoria,
                     hora = hora,
                     usuarioEmail = emailLimpio,
                     completado = false,
                     sincronizado = false
                 )
 
-                // Guardamos usando la nueva lógica del ViewModel/Repository
-                viewModel.insertar(nuevoHabito)
-
-                // Programar alarma
-                if (hora.isNotEmpty()) {
-                    alarmHelper.programarAlarma(nuevoHabito)
+                if (habitoId == 0) {
+                    viewModel.insertar(habitoAGuardar)
+                    Toast.makeText(requireContext(), "Hábito creado", Toast.LENGTH_SHORT).show()
+                } else {
+                    viewModel.actualizar(habitoAGuardar)
+                    Toast.makeText(requireContext(), "Hábito actualizado", Toast.LENGTH_SHORT).show()
                 }
 
-                Toast.makeText(requireContext(), "Hábito guardado", Toast.LENGTH_SHORT).show()
+                if (hora.isNotEmpty()) {
+                    alarmHelper.programarAlarma(habitoAGuardar)
+                }
 
-                // Limpieza de UI y navegación
-                requireActivity().findViewById<View>(R.id.nav_host_fragment).visibility = View.INVISIBLE
                 findNavController().popBackStack()
 
             } else {
-                val mensaje = if (user == null) "Cargando sesión..." else "Escribe un nombre"
-                Toast.makeText(requireContext(), mensaje, Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Por favor, completa los campos", Toast.LENGTH_SHORT).show()
             }
         }
     }
