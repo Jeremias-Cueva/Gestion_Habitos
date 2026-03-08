@@ -13,15 +13,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.example.gestionhabitos.R
+import com.example.gestionhabitos.data.ResetManager
 import com.example.gestionhabitos.databinding.ActivityMainBinding
 import com.example.gestionhabitos.view.adapters.MainViewPagerAdapter
 import com.example.gestionhabitos.viewmodel.UsuarioViewModel
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val usuarioViewModel: UsuarioViewModel by viewModels()
+    private lateinit var resetManager: ResetManager
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -37,6 +41,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        resetManager = ResetManager(this)
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -47,6 +53,10 @@ class MainActivity : AppCompatActivity() {
 
         usuarioViewModel.datosUsuario.observe(this) { usuario ->
             if (usuario != null) {
+                // 🔥 LÓGICA DE REINICIO DIARIO
+                lifecycleScope.launch {
+                    resetManager.ejecutarReinicioDiario(usuario.email)
+                }
                 mostrarPantallaPrincipal()
             } else {
                 mostrarPantallaLogin()
@@ -54,7 +64,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Función para que los fragmentos oculten/muestren la barra inferior y el viewpager
     fun setNavegacionPrincipal(visible: Boolean) {
         if (visible) {
             binding.viewPager.visibility = View.VISIBLE

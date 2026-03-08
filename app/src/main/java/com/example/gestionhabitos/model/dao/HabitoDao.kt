@@ -13,7 +13,6 @@ interface HabitoDao {
     @Query("SELECT * FROM habitos WHERE usuarioEmail = :email AND sincronizado = 0")
     suspend fun obtenerHabitosPendientes(email: String): List<Habito>
 
-    // Usamos IGNORE para que si el ID ya existe, no de error ni borre el actual
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertar(habito: Habito): Long
 
@@ -23,13 +22,15 @@ interface HabitoDao {
     @Delete
     suspend fun eliminar(habito: Habito)
 
-    // 🔥 ESTA ES LA FUNCIÓN QUE TE DABA ERROR
     @Transaction
     suspend fun insertarOActualizar(habito: Habito) {
         val id = insertar(habito)
         if (id == -1L) {
-            // Si el ID ya existe (retorna -1), entonces actualizamos el registro
             actualizar(habito)
         }
     }
+
+    // 🔥 REINICIO DIARIO: Desmarcar todos los hábitos de un usuario
+    @Query("UPDATE habitos SET completado = 0 WHERE usuarioEmail = :email")
+    suspend fun reiniciarHabitosDiarios(email: String)
 }

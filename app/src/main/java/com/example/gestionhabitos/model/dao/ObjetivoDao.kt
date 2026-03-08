@@ -1,7 +1,7 @@
 package com.example.gestionhabitos.model.dao
 
 import androidx.room.*
-import com.example.gestionhabitos.model.entitis.Objetivo // 👈 CORREGIDO: Apunta a entitis
+import com.example.gestionhabitos.model.entitis.Objetivo
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -24,8 +24,11 @@ interface ObjetivoDao {
     @Transaction
     suspend fun guardarListaDeNube(objetivos: List<Objetivo>) {
         objetivos.forEach { objetivo ->
-            // Al venir de la nube, marcamos como sincronizado = true
             insertar(objetivo.copy(sincronizado = true))
         }
     }
+
+    // 🔥 REINICIO DIARIO: Poner a 0 el valor actual de los objetivos de un usuario
+    @Query("UPDATE objetivos SET valorActual = 0.0, completado = 0 WHERE usuarioEmail = :email")
+    suspend fun reiniciarObjetivosDiarios(email: String)
 }
