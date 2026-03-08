@@ -46,7 +46,7 @@ El repositorio incluye:
 
 El modelo de datos está diseñado para mantener la integridad entre los usuarios, sus hábitos y los registros de cumplimiento.
 
-![DER HabitFlow](images/DER HabitFlow.png)
+![DER HabitFlow](images/DER_HabitFlow.png)
 
 ### Descripción de Entidades
 
