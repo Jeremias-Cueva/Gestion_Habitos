@@ -38,7 +38,7 @@ El repositorio incluye:
 
 | Inicio de Sesión | Dashboard de Hábitos | Estadísticas |
 |------------------|----------------------|--------------|
-| ![](images/login.jpeg) | ![](images/dashboard.jpeg) | ![](images/estadisticas.jpeg) |
+| ![](images/login.jpeg) | ![](images/habitos.jpeg) | ![](images/estadisticas.jpeg) |
 
 ---
 
