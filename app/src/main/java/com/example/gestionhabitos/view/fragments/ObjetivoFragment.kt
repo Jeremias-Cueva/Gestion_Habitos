@@ -37,6 +37,9 @@ class ObjetivoFragment : Fragment() {
         setupRecyclerView()
         observeViewModel()
 
+        // 🔥 SINCRONIZACIÓN AUTOMÁTICA: Se ejecuta al entrar a la pantalla
+        viewModel.sincronizarConNube()
+
         binding.fabAddObjetivo.setOnClickListener {
             mostrarDialogoAgregar()
         }
@@ -139,7 +142,7 @@ class ObjetivoFragment : Fragment() {
                         metaValor = meta,
                         completado = objetivo.valorActual >= meta
                     )
-                    viewModel.actualizarProgreso(actualizado, objetivo.valorActual) // Reutilizamos actualización
+                    viewModel.actualizarProgreso(actualizado, objetivo.valorActual)
                 }
             }
             .setNegativeButton("Cancelar", null)

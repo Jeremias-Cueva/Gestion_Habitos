@@ -18,16 +18,25 @@ class ObjetivoViewModel(application: Application) : AndroidViewModel(application
         val db = AppDatabase.getDatabase(application)
         repository = ObjetivoRepository(db.objetivoDao())
         
-        // Obtenemos el email del usuario activo desde Room
+        // 1. Obtenemos el email del usuario activo
         usuarioEmail = db.usuarioDao().obtenerSesionActiva().asLiveData().map { it?.email }
         
-        // Cargamos los objetivos asociados a ese email
+        // 2. Cargamos los objetivos asociados (Room se encarga de mantener esto actualizado)
         listaObjetivos = usuarioEmail.switchMap { email ->
             if (email != null) {
+                // 🔥 TRUCO: Aprovechamos que ya tenemos el email para disparar la sincronización
+                sincronizarAhora(email) 
                 repository.obtenerObjetivosDeUsuario(email).asLiveData()
             } else {
                 MutableLiveData(emptyList())
             }
+        }
+    }
+
+    private fun sincronizarAhora(email: String) {
+        viewModelScope.launch {
+            repository.sincronizarPendientes(email)
+            repository.descargarObjetivosDeNube(email)
         }
     }
 
@@ -60,11 +69,8 @@ class ObjetivoViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    // Mantenemos esta función por si quieres un botón de "Refrescar" manual
     fun sincronizarConNube() {
-        val email = usuarioEmail.value ?: return
-        viewModelScope.launch {
-            repository.descargarObjetivosDeNube(email)
-            repository.sincronizarPendientes(email)
-        }
+        usuarioEmail.value?.let { sincronizarAhora(it) }
     }
 }
